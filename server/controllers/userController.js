@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
+import { getDataEmbedding, getQueryEmbedding } from "../utils/getEmbedding.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -18,9 +19,9 @@ const saveUser = async (req, res, next) => {
     const userData = req.body.user;
     const user = await User.findOne({ googleId: userData.googleId });
     user.about = { ...userData.about };
+    const embedding = await getDataEmbedding([JSON.stringify(userData.about)]);
+    console.log(embedding);
     user.save();
-
-    vectorStore.addDocuments([{ pageContent: "", metadata: userData.about }]);
     
     res
         .status(201)
