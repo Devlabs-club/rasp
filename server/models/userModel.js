@@ -46,7 +46,10 @@ const userSchema = new mongoose.Schema({
         socials: {
             type: Array
         }
-    }    
+    },
+    embedding: {
+        type: Array
+    }
 });
 
 export default mongoose.model("User", userSchema);

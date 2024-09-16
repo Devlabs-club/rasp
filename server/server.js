@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import authRouter from "./routes/authRoute.js";
+import aboutRouter from "./routes/userRoute.js";
 import { userVerification } from "./middlewares/authMiddleware.js";
 
 // Database
@@ -25,6 +26,7 @@ app.use(express.json());
 
 app.post('/', userVerification);
 app.use("/auth", authRouter);
+app.use("/user", aboutRouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
