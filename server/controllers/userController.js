@@ -20,7 +20,7 @@ const saveUser = async (req, res, next) => {
     user.about = { ...userData.about };
     user.save();
 
-    vectorStore.addDocuments([{ userData }]);
+    vectorStore.addDocuments([{ pageContent: "", metadata: userData.about }]);
     
     res
         .status(201)
