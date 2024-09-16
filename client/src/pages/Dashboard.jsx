@@ -4,12 +4,17 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
 
+import UserProfile from "../components/UserProfile.jsx";
+import Search from "../components/Search.jsx";
+
 const Dashboard = () => {
     const navigate = useNavigate();
     const [cookies, removeCookie] = useCookies([]);
     const [user, setUser] = useState({});
+    
 
     const Logout = useCallback(() => {
+        setUser({});
         googleLogout();
         removeCookie("token");
         navigate("/signin");
@@ -28,18 +33,11 @@ const Dashboard = () => {
         verifyCookie();
     }, [cookies, navigate, Logout]);
 
-
-    console.log(user);
-
     return (
-        user 
-        ? 
         <section className="container mx-auto flex flex-col justify-center items-center h-svh">
-            <p>You're logged in</p>
+            {user.about?.bio ? <Search /> : <UserProfile user={user} setUser={setUser} />}
             <button onClick={Logout} className="text-neutral-950 flex gap-2 justify-center items-center p-4 rounded-md border shadow-lg font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 bg-white">Logout</button>
-        </section> 
-        : 
-        <></>        
+        </section>       
     );
 }
 
