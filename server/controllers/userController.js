@@ -1,26 +1,14 @@
 import User from "../models/userModel.js";
-import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
-import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { getDataEmbedding, getQueryEmbedding } from "../utils/getEmbedding.js";
 import dotenv from "dotenv";
 dotenv.config();
-
-const vectorStore = new MongoDBAtlasVectorSearch(new HuggingFaceTransformersEmbeddings({
-    model: 'mixedbread-ai/mxbai-embed-large-v1',
-  }), {
-  collection: User.db.collection("users"), 
-  indexName: "vector_index", 
-  textKey: "about", 
-  embeddingKey: "embedding",
-});
 
 const saveUser = async (req, res, next) => {
   try {
     const userData = req.body.user;
     const user = await User.findOne({ googleId: userData.googleId });
     user.about = { ...userData.about };
-    const embedding = await getDataEmbedding([JSON.stringify(userData.about)]);
-    console.log(embedding);
+    user.embedding = await getDataEmbedding([JSON.stringify(userData.about)]);
     user.save();
     
     res
@@ -34,8 +22,29 @@ const saveUser = async (req, res, next) => {
 }
 
 const searchUser = async (req, res, next) => {
-  const result = await vectorStore.similaritySearch(req.body.query, 1);
-  console.log(result);
+  const agg = [
+    {
+      '$vectorSearch': {
+        'index': 'vector_index',
+        'path': 'embedding',
+        'queryVector': await getQueryEmbedding(req.body.query), // Adjust the query vector as needed
+        'numCandidates': 6,
+        'limit': 1
+      }
+    },
+    {
+      '$project': {
+        '_id': 0,
+        'email': 1,
+        'name': 1,
+        'about': 1,
+        'score': {
+          '$meta': 'vectorSearchScore'
+        }
+      }
+    }
+  ];
+  const result = await User.aggregate(agg);
   res.json(result);
 }
 

@@ -6,12 +6,12 @@ const model = new HuggingFaceTransformersEmbeddings({
 
 const getDataEmbedding = async (data) => {
   const response = await model.embedDocuments(data);
-  return response.data;
+  return response[0];
 }
 
 const getQueryEmbedding = async (query) => {
   const response = await model.embedQuery(query);
-  return response.data;
+  return response;
 }
 
 export { getDataEmbedding, getQueryEmbedding };
