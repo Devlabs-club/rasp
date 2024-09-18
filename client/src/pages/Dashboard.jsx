@@ -4,14 +4,13 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
 
-import UserProfile from "../components/UserProfile.jsx";
-import Search from "../components/Search.jsx";
+import UserProfile from "../components/tabs/UserProfile.jsx";
+import Search from "../components/tabs/Search.jsx";
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [cookies, removeCookie] = useCookies([]);
     const [user, setUser] = useState({});
-    
 
     const Logout = useCallback(() => {
         setUser({});
@@ -34,9 +33,9 @@ const Dashboard = () => {
     }, [cookies, navigate, Logout]);
 
     return (
-        <section className="container mx-auto flex flex-col justify-center items-center h-svh">
+        <section className="container mx-auto flex flex-col gap-20 py-24">
             {user.about?.bio ? <Search /> : <UserProfile user={user} setUser={setUser} />}
-            <button onClick={Logout} className="text-neutral-950 flex gap-2 justify-center items-center p-4 rounded-md border shadow-lg font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 bg-white">Logout</button>
+            <button onClick={Logout} className="text-white flex gap-2 justify-center items-center px-4 py-2 rounded-md font-medium transition-all duration-200 hover:-translate-y-0.5 bg-red-500"></button>
         </section>       
     );
 }

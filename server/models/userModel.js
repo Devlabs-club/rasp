@@ -1,5 +1,19 @@
 import mongoose from "mongoose";
 
+const projectSchema = new mongoose.Schema({
+    name: String,
+    description: String,
+    tools: [String],
+    links: [String]
+});
+
+const experienceSchema = new mongoose.Schema({
+    role: String,
+    company: String,
+    description: String,
+    skills: [String]
+});
+
 const userSchema = new mongoose.Schema({
     googleId: {
         type: String,
@@ -15,41 +29,21 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    photo: {
-        type: Buffer
-    },
+    photo: Buffer,
     about: {
-        age: {
-            type: Number,
-        },
-        gender: {
-            type: String,
-        },
-        location: {
-            type: String,
-        },
-        bio: {
-            type: String
-        },
-        projects: {
-            type: Array
-        },
-        skills: {
-            type: Array
-        },
-        experience: {
-            type: Array
-        },
-        hobbies: {
-            type: Array
-        },
-        socials: {
-            type: Array
-        }
+        dateOfBirth: Date,
+        gender: String,
+        campus: String,
+        standing: String,
+        major: String,
+        skills: [String],
+        projects: [projectSchema],        
+        experience: [experienceSchema],
+        hobbies: [String],
+        socials: [String],
+        bio: String
     },
-    embedding: {
-        type: Array
-    }
+    embedding: []
 });
 
 export default mongoose.model("User", userSchema);

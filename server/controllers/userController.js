@@ -1,15 +1,47 @@
 import User from "../models/userModel.js";
-import { getDataEmbedding, getQueryEmbedding } from "../utils/getEmbedding.js";
+import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
+import { Document } from "@langchain/core/documents";
 import dotenv from "dotenv";
 dotenv.config();
+
+const embeddings = new HuggingFaceTransformersEmbeddings({
+  model: "mixedbread-ai/mxbai-embed-large-v1"
+});
+const vectorStore = new MongoDBAtlasVectorSearch(
+  embeddings,
+  {
+    collection: User.db.collection("users"), 
+    indexName: "vector_index", // The name of the Atlas search index. Defaults to "default"
+    textKey: "summary", // The name of the collection field containing the raw content. Defaults to "text"
+    embeddingKey: "embedding", // The name of the collection field containing the embedded text. Defaults to "embedding"
+  }
+);
 
 const saveUser = async (req, res, next) => {
   try {
     const userData = req.body.user;
     const user = await User.findOne({ googleId: userData.googleId });
     user.about = { ...userData.about };
-    user.embedding = await getDataEmbedding([JSON.stringify(userData.about)]);
     user.save();
+
+    await vectorStore.addDocuments([new Document(
+      { 
+        pageContent: `
+          ${userData.about.gender} from ASU ${userData.about.campus} campus.\n
+          Bio: ${userData.about.bio} \n
+          Skills: ${userData.about.skills.join(", ")} \n
+          Hobbies: ${userData.about.hobbies.join(", ")} \n
+          Socials: ${userData.about.socials.join(", ")} \n
+          Projects: ${userData.about.projects} \n
+          Experience: ${userData.about.experience} \n
+        `, 
+        metadata: {age: userData.age, gender: userData.gender, location: userData.location} 
+      }
+    )
+      ,
+    ], { ids: [user._id] });
     
     res
         .status(201)
@@ -21,31 +53,35 @@ const saveUser = async (req, res, next) => {
   }
 }
 
+const llm = new ChatGoogleGenerativeAI({
+  model: "gemini-1.5-flash",
+  temperature: 0,
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
 const searchUser = async (req, res, next) => {
-  const agg = [
-    {
-      '$vectorSearch': {
-        'index': 'vector_index',
-        'path': 'embedding',
-        'queryVector': await getQueryEmbedding(req.body.query), // Adjust the query vector as needed
-        'numCandidates': 6,
-        'limit': 1
-      }
-    },
-    {
-      '$project': {
-        '_id': 0,
-        'email': 1,
-        'name': 1,
-        'about': 1,
-        'score': {
-          '$meta': 'vectorSearchScore'
-        }
-      }
-    }
-  ];
-  const result = await User.aggregate(agg);
-  res.json(result);
+  const retrievedDocs = await vectorStore.similaritySearch(req.body.query, 3);
+
+  const prompt = `
+    Query: ${req.body.query}
+    Context: ${JSON.stringify(retrievedDocs)}
+    Array:
+  `;
+  const userGoogleIds = JSON.parse((await llm.invoke([
+    [
+      "system",
+      "You are an assistant that returns an array of user googleIds based on a query. Use the following pieces of retrieved context. If there are no matches, just return an empty array []. Return only an array and NOTHING ELSE no matter what.",
+    ],
+    ["human", prompt],
+  ])).content);
+  
+  const users = []
+  for (const googleId of userGoogleIds) {
+    const user = await User.findOne({ googleId });
+    users.push(user);
+  }
+
+  res.json(users);
 }
 
 export { saveUser, searchUser };

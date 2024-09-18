@@ -21,11 +21,18 @@ const Search = () => {
         <button type="submit text-white">Search</button>
       </form>
 
-      <ul>
+      <ul className="flex flex-col gap-4">
         { response.map((user, index) => {
           return (
             <li key={index}>
-              <p>{JSON.stringify(user.about)}</p>
+              <p>{user.name}</p>
+              {
+                Object.keys(user.about).map((key) => {
+                  return (
+                    <p>{key}: {JSON.stringify(user.about[key])}</p>
+                  )
+                })
+              }
             </li>
           )
         })}
