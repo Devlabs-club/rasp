@@ -2,8 +2,11 @@ import React from 'react'
 
 const UserCard = ({ user }) => {
   return (
-    <div className={`w-[500px] border border-gray-600 sticky left-0 top-10`}>
-      <img src={user.photo} alt={user.name} className='w-full h-52 border border-gray-600 bg-neutral-900' />
+    <div className={`w-[500px] border border-gray-600 sticky top-0 right-0`}>
+      <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
+        <img src={`/images/${user.email}.jpg`} alt={user.name} className='w-full aspect-video object-cover border border-gray-600 mix-blend-multiply' />
+      </div>
+      
       <div className='flex flex-col'>
         <div className='flex flex-col gap-1 border border-gray-600 px-3 py-4'>
             <h2 className='text-lg font-semibold flex gap-2 items-center'>{user.name} <span className="text-base font-normal text-neutral-400">{user.about.gender} | {user.about.campus} campus</span></h2>

@@ -8,6 +8,8 @@ const Search = () => {
   const [response, setResponse] = useState([]);
   const [query, setQuery] = useState("");
 
+  const [selectedUser, setSelectedUser] = useState(null);
+
   const searchUser = async (e) => {
     e.preventDefault();
 
@@ -16,18 +18,24 @@ const Search = () => {
   }
 
   return (
-    <div className="flex flex-col gap-12">
-      <Heading>Search for users!</Heading>
-      <form onSubmit={searchUser} className="flex gap-4">
-        <input type="text" name="search" id="search" onChange={(e) => setQuery(e.target.value)} className="bg-neutral-800 p-3 text-neutral-200 rounded-md w-96" autoComplete="off" />
-        <button type="submit" className="px-4 py-2 bg-white text-neutral-800 rounded-md">Search</button>
-      </form>
+    <div className="grid grid-cols-2 gap-20">
+      <div className="flex flex-col gap-12">
+        <Heading>Search for people!</Heading>
+        <form onSubmit={searchUser} className="flex gap-4">
+          <input type="text" name="search" id="search" onChange={(e) => setQuery(e.target.value)} className="bg-neutral-800 p-3 text-neutral-200 rounded-md w-96" autoComplete="off" />
+          <button type="submit" className="px-4 py-2 bg-white text-neutral-800 rounded-md">Search</button>
+        </form>
 
-      <ul className="flex gap-4">
-        { response.map((user, index) => <SelectedUser key={index} user={user} />)}
-        {/* <SelectedUser user={user} /> */}
-      </ul>
+        <ul className="flex gap-4">
+          { response.map((user, index) => <UserCard key={index} user={user} setSelectedUser={setSelectedUser} />)}
+        </ul>
+      </div>
+
+      <div className="col-span-1">
+          { selectedUser ? <SelectedUser user={selectedUser} /> : <></> }
+      </div>
     </div>
+    
   )
 }
 

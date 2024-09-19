@@ -71,7 +71,12 @@ const searchUser = async (req, res, next) => {
   const retrievedUsers = JSON.parse((await llm.invoke([
     [
       "system",
-      "You're an assistant that returns an array of objects in the format {googleId: <user's googleId>, relevantInfo: <generated relevant user information to the query>} based on a query. Make sure to only include users relevant to the search. Use the following pieces of retrieved context. If there are no matches, just return an empty array []. Return only an array and NOTHING ELSE no matter what. For relevantInformation, generate only information that is directly relevant to the query (max 10 words) in god-perspective.",
+      `You're an assistant that returns an array of objects in the format 
+      {googleId: <userGoogleId>, relevantInfo: <infoRelevantToQuery>} based on a query.
+      It is very important that you only include users relevant to the query, don't stretch the meaning of the query too far. 
+      For relevantInformation, generate only detailed information that is directly relevant to the query (max 10 words) in god-perspective.
+      Use the following pieces of retrieved context. If there are no matches, just return an empty array [].
+      Return only an array and NOTHING ELSE no matter what.`,
     ],
     ["human", prompt],
   ])).content);

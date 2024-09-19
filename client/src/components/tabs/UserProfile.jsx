@@ -42,10 +42,10 @@ const UserProfile = ({ user, setUser }) => {
     }
 
   return (
-    <div className="flex flex-col gap-12">
-        <Heading>Enter your information</Heading>
-
-        <div className="grid grid-cols-2 gap-20">
+    <div className="grid grid-cols-2 gap-20">
+        <div className="flex flex-col gap-12">
+            <Heading>Enter your information</Heading>
+        
             <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-6 col-span-1">
                 <Input label="your name" name="name" placeholder="e.g. forrest gump" value={userData.name} setValue={(value) => {
                     setUserData(userData => {
@@ -86,12 +86,11 @@ const UserProfile = ({ user, setUser }) => {
                 )} />
                 <SubmitButton onClick={saveUser} />
             </form>
-
-            <div className="col-span-1">
-                <SelectedUser user={{...user, ...userData}} />
-            </div>
         </div>
         
+        <div className="col-span-1">
+            <SelectedUser user={{...user, ...userData}} />
+        </div>
     </div>    
   )
 }
