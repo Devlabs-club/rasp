@@ -1,61 +1,49 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import functionDeclarations from "../utils/chatFunctionDeclarations.js";
 import User from "../models/userModel.js";
-import getEmbedding from "../utils/getEmbedding.js"
+import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
+import { Document } from "@langchain/core/documents";
 import dotenv from "dotenv";
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-// Model
-const generativeModel = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
-
-  tools: {
-    functionDeclarations,
-  },
-  generationConfig: {
-    temperature: 1
+const embeddings = new HuggingFaceTransformersEmbeddings({
+  model: "mixedbread-ai/mxbai-embed-large-v1"
+});
+const vectorStore = new MongoDBAtlasVectorSearch(
+  embeddings,
+  {
+    collection: User.db.collection("users"), 
+    indexName: "vector_index", // The name of the Atlas search index. Defaults to "default"
+    textKey: "summary", // The name of the collection field containing the raw content. Defaults to "text"
+    embeddingKey: "embedding", // The name of the collection field containing the embedded text. Defaults to "embedding"
   }
-});
-
-const chat = generativeModel.startChat({
-  history: [{
-      role: "user",
-      parts: [{ 
-        text: 
-          `You are Invenire, an AI RAG assistant that uses function calling to select users from a given subset when prompted with a query.` 
-      }],
-    }]
-});
-
-// Functions
-const functions = {
-  selectUsers: async ({ userGoogleIds }) => {
-    return userGoogleIds;
-  },
-}
+);
 
 const saveUser = async (req, res, next) => {
   try {
     const userData = req.body.user;
     const user = await User.findOne({ googleId: userData.googleId });
+    user.name = userData.name;
     user.about = { ...userData.about };
-
-    const data = `
-        ${userData.about.age} year old ${userData.about.gender} from ${userData.about.location}.\n
-        Bio: ${userData.about.bio}\n
-        Projects: ${userData.about.projects} \n
-        Skills: ${userData.about.skills} \n
-        Experience: ${userData.about.experience} \n
-        Hobbies: ${userData.about.hobbies} \n
-        Socials: ${userData.about.socials} \n
-
-    `;
-    const embedding = await getEmbedding(data);
-    user.embedding = embedding;
     user.save();
 
+    await vectorStore.addDocuments([new Document(
+      { 
+        pageContent: `
+          ${userData.about.gender} from ASU ${userData.about.campus} campus.\n
+          Bio: ${userData.about.bio} \n
+          Skills: ${userData.about.skills.join(", ")} \n
+          Hobbies: ${userData.about.hobbies.join(", ")} \n
+          Socials: ${userData.about.socials.join(", ")} \n
+          Projects: ${userData.about.projects} \n
+          Experience: ${userData.about.experience} \n
+        `, 
+        metadata: {age: userData.age, gender: userData.gender, location: userData.location} 
+      }
+    )
+      ,
+    ], { ids: [user._id] });
+    
     res
         .status(201)
         .json({ message: "User data has been saved" });
@@ -66,53 +54,34 @@ const saveUser = async (req, res, next) => {
   }
 }
 
-const selectUsers = async (query, userSubset) => {
-  const result = await chat.sendMessage(`Use function calling to select users from this subset: ${userSubset}\n\nQuery: ${query}`);
-
-  const call = result.response.functionCalls() ? result.response.functionCalls()[0] : null;
-
-  if (call) {
-    const userGoogleIds = functions[call.name](call.args);
-    const users = []
-
-    for (const userGoogleId of userGoogleIds) {
-      const user = await User.findOne({ googleId: userGoogleId });
-      users.push(user);
-    }
-
-    return users;
-  }
-}
+const llm = new ChatGoogleGenerativeAI({
+  model: "gemini-1.5-flash",
+  temperature: 0,
+  apiKey: process.env.GEMINI_API_KEY,
+});
 
 const searchUser = async (req, res, next) => {
-  const agg = [
-      {
-          "$vectorSearch": {
-          "index": "vector_index",
-          "limit": 3,
-          "numCandidates": 5,
-          "path": "embedding",
-          "queryVector": await getEmbedding(req.body.query)
-          }
-      },
-      {
-        '$project': {
-            '_id': 0, 
-            'name': 1, 
-            'email': 1,
-            'about': 1,
-            'score': {
-              '$meta': 'vectorSearchScore'
-            }
-        }
-      }
-  ];
-  // run pipeline
-  const userSubset = await User.aggregate(agg);
+  const retrievedDocs = await vectorStore.similaritySearch(req.body.query, 3);
 
-  const users = await selectUsers(req.body.query, userSubset);
+  const prompt = `
+    Query: ${req.body.query}
+    Context: ${JSON.stringify(retrievedDocs)}
+    Array:
+  `;
+  const retrievedUsers = JSON.parse((await llm.invoke([
+    [
+      "system",
+      "You're an assistant that returns an array of objects in the format {googleId: <user's googleId>, relevantInfo: <generated relevant user information to the query>} based on a query. Make sure to only include users relevant to the search. Use the following pieces of retrieved context. If there are no matches, just return an empty array []. Return only an array and NOTHING ELSE no matter what. For relevantInformation, generate only information that is directly relevant to the query (max 10 words) in god-perspective.",
+    ],
+    ["human", prompt],
+  ])).content);
   
-  // print results
+  const users = []
+  for (const retrievedUser of retrievedUsers) {
+    const user = (await User.findOne({ googleId: retrievedUser.googleId }))._doc;
+    users.push({...user, relevantInfo: retrievedUser.relevantInfo});
+  }
+
   res.json(users);
 }
 

@@ -11,8 +11,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/generative-ai": "^0.19.0",
+    "@langchain/community": "^0.3.0",
+    "@langchain/core": "^0.3.1",
+    "@langchain/google-genai": "^0.1.0",
+    "@langchain/mongodb": "^0.1.0",
     "@xenova/transformers": "^2.17.2",
+    "axios": "^1.7.7",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -20,8 +24,11 @@
     "googleapis": "^143.0.0",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
+    "langchain": "^0.3.2",
+    "mongodb": "^6.9.0",
     "mongoose": "^8.6.0",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "peggy": "^4.0.3"
   },
   "type": "module"
 }
