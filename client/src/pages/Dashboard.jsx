@@ -34,7 +34,7 @@ const Dashboard = () => {
 
     return (
         <section className="container mx-auto flex flex-col gap-16 py-24">
-            {user.about?.bio ? <Search /> : <UserProfile user={user} setUser={setUser} />}
+            {user ? (user.about?.bio ? <Search user={user} /> : <UserProfile user={user} setUser={setUser} />) : <></>}
             <button onClick={Logout} className="text-white flex gap-2 justify-center items-center px-4 py-2 rounded-md font-medium transition-all duration-200 hover:-translate-y-0.5 bg-red-500 w-fit"></button>
         </section>       
     );

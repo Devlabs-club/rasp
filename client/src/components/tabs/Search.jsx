@@ -4,7 +4,7 @@ import UserCard from "../user/UserCard";
 import SelectedUser from "../user/SelectedUser";
 import Heading from "../text/Heading";
 
-const Search = () => {
+const Search = ({ user }) => {
   const [response, setResponse] = useState([]);
   const [query, setQuery] = useState("");
 
@@ -13,7 +13,8 @@ const Search = () => {
   const searchUser = async (e) => {
     e.preventDefault();
 
-    const data = (await axios.post("http://localhost:5000/user/search", { query: query })).data
+    const data = (await axios.post("http://localhost:5000/user/search", { query, user })).data
+    setSelectedUser(null);
     setResponse(data);
   }
 
@@ -34,8 +35,7 @@ const Search = () => {
       <div className="col-span-1">
           { selectedUser ? <SelectedUser user={selectedUser} /> : <></> }
       </div>
-    </div>
-    
+    </div> 
   )
 }
 

@@ -4,7 +4,7 @@ const UserCard = ({ user, setSelectedUser }) => {
   return (
     <div className='w-52 border border-gray-600' onClick={() => setSelectedUser(user)}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
-        <img src={`/images/${user.email}.jpg`} alt={user.name} className='w-full object-cover aspect-video border border-gray-600 mix-blend-multiply' />
+        <img src={`/images/${user.email}.jpg`} alt={user.name} className='w-full object-cover border border-gray-600 mix-blend-multiply' />
       </div>
       
       <div className='flex flex-col gap-2 px-3 py-5'>

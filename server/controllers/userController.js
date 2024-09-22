@@ -61,7 +61,8 @@ const llm = new ChatGoogleGenerativeAI({
 });
 
 const searchUser = async (req, res, next) => {
-  const retrievedDocs = await vectorStore.similaritySearch(req.body.query, 3);
+  const retrievedDocs = await vectorStore.similaritySearch(req.body.query, 5);
+  retrievedDocs = retrievedDocs.filter(doc => doc.googleId !== req.body.user.googleId);
 
   const prompt = `
     Query: ${req.body.query}
@@ -73,7 +74,7 @@ const searchUser = async (req, res, next) => {
       "system",
       `You're an assistant that returns an array of objects in the format 
       {googleId: <userGoogleId>, relevantInfo: <infoRelevantToQuery>} based on a query.
-      It is very important that you only include users relevant to the query, don't stretch the meaning of the query too far. 
+      It is very important that you only include users DIRECTLY relevant to the query, don't stretch the meaning of the query too far. 
       For relevantInformation, generate only detailed information that is directly relevant to the query (max 10 words) in god-perspective.
       Use the following pieces of retrieved context. If there are no matches, just return an empty array [].
       Return only an array and NOTHING ELSE no matter what.`,
@@ -81,7 +82,7 @@ const searchUser = async (req, res, next) => {
     ["human", prompt],
   ])).content);
   
-  const users = []
+  const users = [];
   for (const retrievedUser of retrievedUsers) {
     const user = (await User.findOne({ googleId: retrievedUser.googleId }))._doc;
     users.push({...user, relevantInfo: retrievedUser.relevantInfo});
