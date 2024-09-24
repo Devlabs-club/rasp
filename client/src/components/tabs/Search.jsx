@@ -1,14 +1,17 @@
 import axios from "axios";
 import { useState } from "react";
 import UserCard from "../user/UserCard";
-import SelectedUser from "../user/SelectedUser";
+import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
+import Chat from "../tabs/Chat";
 
 const Search = ({ user }) => {
   const [response, setResponse] = useState([]);
   const [query, setQuery] = useState("");
 
   const [selectedUser, setSelectedUser] = useState(null);
+
+  const [openedChat, setOpenedChat] = useState(null);
 
   const searchUser = async (e) => {
     e.preventDefault();
@@ -33,7 +36,8 @@ const Search = ({ user }) => {
       </div>
 
       <div className="col-span-1">
-          { selectedUser ? <SelectedUser user={selectedUser} /> : <></> }
+          { openedChat ? <Chat sender={openedChat.sender} receiver={openedChat.receiver} /> : <></> }
+          { selectedUser ? <SelectedUserCard user={user} selectedUser={selectedUser} setOpenedChat={setOpenedChat} /> : <></> }
       </div>
     </div> 
   )

@@ -1,5 +1,4 @@
 import React from 'react'
-import { FaChevronDown } from "react-icons/fa";
 
 const SelectInput = ({label, name, options, value, setValue}) => {
   return (
@@ -10,7 +9,6 @@ const SelectInput = ({label, name, options, value, setValue}) => {
             {options.map((option, index) => 
               <option key={index} value={option} className='bg-neutral-900'>{option}</option>
             )}
-            <FaChevronDown />
         </select>
     </div>   
   )

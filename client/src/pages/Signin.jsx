@@ -10,7 +10,7 @@ const Signin = () => {
     const navigate = useNavigate();
     const [cookies] = useCookies([]);
     useEffect(() => {
-        if (cookies.token && cookies.token != "undefined") {
+        if (cookies.token && cookies.token !== "undefined") {
             navigate("/");
         }
     }, [cookies, navigate]);

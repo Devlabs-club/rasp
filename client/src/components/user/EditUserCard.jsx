@@ -1,6 +1,6 @@
 import React from 'react'
 
-const UserCard = ({ user }) => {
+const EditUserCard = ({ user }) => {  
   return (
     <div className={`w-[500px] border border-gray-600 sticky top-10 right-0`}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
@@ -40,9 +40,9 @@ const UserCard = ({ user }) => {
         </div>
         
         <p></p>
-      </div>      
+      </div>
     </div>
   )
 }
 
-export default UserCard
+export default EditUserCard;

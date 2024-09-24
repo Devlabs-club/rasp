@@ -9,7 +9,7 @@ import TextBox from "../inputs/TextBox";
 // import ExperienceInput from "../inputs/ExperienceInput";
 import SubmitButton from "../inputs/SubmitButton";
 import Heading from "../text/Heading";
-import SelectedUser from "../user/SelectedUser";
+import EditUserCard from "../user/EditUserCard";
 
 const UserProfile = ({ user, setUser }) => {
     const [userData, setUserData] = useState({
@@ -89,7 +89,7 @@ const UserProfile = ({ user, setUser }) => {
         </div>
         
         <div className="col-span-1">
-            <SelectedUser user={{...user, ...userData}} />
+            <EditUserCard user={{...user, ...userData}} />
         </div>
     </div>    
   )

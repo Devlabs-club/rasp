@@ -1,5 +1,6 @@
 import User from "../models/userModel.js";
 import { google } from "googleapis";
+import { Message } from "../models/chatModel.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -23,6 +24,12 @@ const userVerification = async (req, res) => {
 
     const user = await User.findOne({ email: googleUser.payload.email });
     if (user) {
+      const receivedMessages = await Message.find({ receiver: user._id, status: "sent" });
+      for (const message of receivedMessages) {
+        message.status = "delivered";
+        message.save();
+      }
+
       return res.json({ status: true, user: { ...user._doc } });
     }
     else {

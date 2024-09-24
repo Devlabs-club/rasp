@@ -62,11 +62,10 @@ const llm = new ChatGoogleGenerativeAI({
 
 const searchUser = async (req, res, next) => {
   const retrievedDocs = await vectorStore.similaritySearch(req.body.query, 5);
-  retrievedDocs = retrievedDocs.filter(doc => doc.googleId !== req.body.user.googleId);
 
   const prompt = `
     Query: ${req.body.query}
-    Context: ${JSON.stringify(retrievedDocs)}
+    Context: ${JSON.stringify(retrievedDocs.filter(doc => doc.metadata.email !== req.body.user.email))}
     Array:
   `;
   const retrievedUsers = JSON.parse((await llm.invoke([
