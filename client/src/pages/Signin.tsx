@@ -6,18 +6,28 @@ import { useNavigate } from "react-router-dom";
 
 import { FaGoogle } from "react-icons/fa";
 
-const Signin = () => {
+interface GoogleAuthResponse {
+    code: string;
+}
+
+interface AuthResponse {
+    success: boolean;
+    message: string;
+}
+
+const Signin: React.FC = () => {
     const navigate = useNavigate();
-    const [cookies] = useCookies([]);
+    const [cookies] = useCookies(['token']);
+    
     useEffect(() => {
         if (cookies.token && cookies.token !== "undefined") {
             navigate("/");
         }
     }, [cookies, navigate]);
 
-    const handleGoogleAuth = async ({ code }) => {   
+    const handleGoogleAuth = async ({ code }: GoogleAuthResponse) => {   
         try {
-            const { data } = await axios.post("http://localhost:5000/auth/google", { code }, { withCredentials: true });
+            const { data } = await axios.post<AuthResponse>("http://localhost:5000/auth/google", { code }, { withCredentials: true });
     
             const { success, message } = data;
             if (success) {
@@ -33,14 +43,17 @@ const Signin = () => {
             console.log(error);
         }
     }
+
     const handleGoogleLogin = useGoogleLogin({
         onSuccess: handleGoogleAuth,
         flow: "auth-code"
-      });
+    });
 
     return (
         <section className="container mx-auto flex justify-center items-center h-svh">
-            <button onClick={handleGoogleLogin} className="text-neutral-950 flex gap-2 justify-center items-center p-4 rounded-md border shadow-lg font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 bg-white"><FaGoogle size="1.125rem"/>Google</button>
+            <button onClick={handleGoogleLogin} className="text-neutral-950 flex gap-2 justify-center items-center p-4 rounded-md border shadow-lg font-medium text-lg transition-all duration-200 hover:-translate-y-0.5 bg-white">
+                <FaGoogle size="1.125rem"/>Google
+            </button>
         </section>
     );
 }

@@ -1,3 +1,5 @@
+import React, { useEffect } from 'react';
+
 const style = `
 	.scroller {
 		height: max-content;
@@ -45,28 +47,35 @@ const style = `
 			animation: scroll-horizontal 30s linear infinite;
 		}
 	}
-</style>
-`
-const scrollers = document.querySelectorAll(".scroller");
+`;
 
-scrollers.forEach(scroller => {
-	const scrollerInner = scroller.querySelector(".scroller__inner");
+interface ScrollProps {
+	children: React.ReactNode;
+	direction: 'horizontal-left' | 'horizontal-right' | 'vertical-down' | 'vertical-up';
+}
 
-	if (scrollerInner) {
-		const scrollerContent = Array.from(scrollerInner.children);
+const Scroll: React.FC<ScrollProps> = ({ children, direction }) => {
+	useEffect(() => {
+		const scrollers = document.querySelectorAll<HTMLElement>(".scroller");
 
-		scrollerContent.forEach(item => {
-			const duplicatedItem = item.cloneNode(true);
-			scrollerInner.appendChild(duplicatedItem);
+		scrollers.forEach(scroller => {
+			const scrollerInner = scroller.querySelector<HTMLElement>(".scroller__inner");
+
+			if (scrollerInner) {
+				const scrollerContent = Array.from(scrollerInner.children);
+
+				scrollerContent.forEach(item => {
+					const duplicatedItem = item.cloneNode(true);
+					scrollerInner.appendChild(duplicatedItem);
+				});
+			}
 		});
-	}		
-});
+	}, []);
 
-const Scroll = ({children, direction}) => {
 	return (
-		<div data-direction={direction} class="scroller">
+		<div data-direction={direction} className="scroller">
 			<style>{style}</style>
-			<div class={`scroller__inner flex gap-2 ${direction.startsWith("vertical") ? "md:flex-col min-w-full min-h-full" : ""}`}>
+			<div className={`scroller__inner flex gap-2 ${direction.startsWith("vertical") ? "md:flex-col min-w-full min-h-full" : ""}`}>
 				{children}
 			</div>
 		</div>

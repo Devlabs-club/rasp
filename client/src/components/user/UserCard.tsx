@@ -1,6 +1,17 @@
-import React from 'react'
+import React from 'react';
 
-const UserCard = ({ user, setSelectedUser }) => {
+interface User {
+  email: string;
+  name: string;
+  relevantInfo: string;
+}
+
+interface UserCardProps {
+  user: User;
+  setSelectedUser: (user: User) => void;
+}
+
+const UserCard: React.FC<UserCardProps> = ({ user, setSelectedUser }) => {
   return (
     <div className='w-52 border border-gray-600' onClick={() => setSelectedUser(user)}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
@@ -12,7 +23,7 @@ const UserCard = ({ user, setSelectedUser }) => {
         <p>{user.relevantInfo}</p>
       </div>      
     </div>
-  )
+  );
 }
 
-export default UserCard
+export default UserCard;
