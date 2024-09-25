@@ -5,7 +5,7 @@ import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
 import Chat from "./Chat";
 
-interface User {
+interface UserCardInfo {
   id: string;
   name: string;
   email: string;
@@ -18,7 +18,7 @@ interface ChatProps {
 }
 
 const Search: React.FC<any> = ({ user }) => {
-  const [response, setResponse] = useState<User[]>([]);
+  const [response, setResponse] = useState<UserCardInfo[]>([]);
   const [query, setQuery] = useState<string>("");
 
   const [selectedUser, setSelectedUser] = useState<any>(null);

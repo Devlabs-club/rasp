@@ -21,8 +21,8 @@ interface User {
         standing: string;
         major: string;
         skills: string[];
-        projects: any[];
-        experience: any[];
+        projects: object[];
+        experience: object[];
         hobbies: string[];
         socials: string[];
         bio: string;
