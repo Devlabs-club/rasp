@@ -29,6 +29,7 @@ const Dashboard: React.FC = () => {
             try {
                 const { data } = await axios.post("http://localhost:5000", {}, { withCredentials: true });
                 const { status, user } = data;
+                
                 if (status) {
                     setUser(user);
                 } else {
@@ -39,7 +40,7 @@ const Dashboard: React.FC = () => {
                 Logout();
             }
         };
-        verifyCookie();
+        verifyCookie();    
     }, [cookies, navigate, Logout]);
 
     return (

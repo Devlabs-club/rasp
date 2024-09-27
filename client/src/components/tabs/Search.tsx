@@ -32,7 +32,7 @@ interface ChatProps {
   receiver: any;
 }
 
-const Search: React.FC<any> = ({ user }) => {
+const Search: React.FC<any> = ({ user, socket }) => {
   const [response, setResponse] = useState<UserCardInfo[]>([]);
   const [query, setQuery] = useState<string>("");
 
@@ -84,7 +84,7 @@ const Search: React.FC<any> = ({ user }) => {
       </div>
 
       <div className="col-span-1">
-        {openedChat ? <Chat sender={openedChat.sender} receiver={openedChat.receiver} /> : <></>}
+        {openedChat ? <Chat sender={openedChat.sender} receiver={openedChat.receiver} socket={socket} /> : <></>}
         {selectedUser ? <SelectedUserCard user={user} selectedUser={selectedUser} openChat={openChat} /> : <></>}
       </div>
     </div>

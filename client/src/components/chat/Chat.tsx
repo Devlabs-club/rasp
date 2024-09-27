@@ -12,7 +12,6 @@ interface User {
 interface MessageType {
   content: string;
   timestamp: string;
-  status: string;
   sender: string;
   receiver: string;
 }
@@ -20,9 +19,10 @@ interface MessageType {
 interface ChatProps {
   sender: User;
   receiver: User;
+  socket: any;
 }
 
-const Chat: React.FC<ChatProps> = ({ sender, receiver }) => {
+const Chat: React.FC<ChatProps> = ({ sender, receiver, socket }) => {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<MessageType[]>([]);
 
@@ -35,19 +35,18 @@ const Chat: React.FC<ChatProps> = ({ sender, receiver }) => {
   useEffect(() => {
     // This function will only run once, on the initial render
     getMessages(sender, receiver);
-
+    
     const socket = io('http://localhost:5000', {
       query: { userId: sender._id } // Pass the userId when connecting to the server
     });
 
-    socket.on('message', (newMessage) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
+    socket.on('message', async (newMessage: any) => {
+      setMessages((prevMessages) => [...prevMessages, newMessage]);    
     });
 
-    // Clean up the socket connection on component unmount
     return () => {
       socket.disconnect();
-    };
+    }
   }, [sender, receiver]);
 
   const saveMessage = async (sender: User, receiver: User) => {
@@ -70,7 +69,7 @@ const Chat: React.FC<ChatProps> = ({ sender, receiver }) => {
         <div className='flex flex-col gap-2'>
           {messages.map((message, index) => {
             return (
-              <Message key={index} content={message.content} timestamp={message.timestamp} status={message.status} isSender={message.sender === sender._id} />
+              <Message key={index} content={message.content} timestamp={message.timestamp} isSender={message.sender === sender._id} />
             );
           })}
         </div>

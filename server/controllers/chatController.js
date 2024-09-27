@@ -20,7 +20,6 @@ const saveMessages = async (req, res) => {
     receiver: req.params.receiver,
     content: req.body.message,
     timestamp: Date.now(),
-    status: 'sent'
   });
 
   let chat = await Chat.findOne({ users: { $all: [req.params.sender, req.params.receiver] } });
@@ -34,15 +33,19 @@ const saveMessages = async (req, res) => {
 }
 
 const messageChangeStream = Message.watch();
-messageChangeStream.on('change', (change) => {
+messageChangeStream.on('change', async (change) => {
   const messageData = change.fullDocument;
 
+  if(change.operationType !== 'insert') return;
+
+  const message = await Message.findById(messageData?._id);
+
   if (connectedClients[messageData?.sender]) {
-    connectedClients[messageData?.sender].emit('message', messageData);
+    connectedClients[messageData?.sender].emit('message', message);
   }
   if (connectedClients[messageData?.receiver]) {
-    connectedClients[messageData?.receiver].emit('message', messageData);
+    connectedClients[messageData?.receiver].emit('message', message);
   }
 });
 
-export {getMessages, saveMessages};
+export { getMessages, saveMessages };
