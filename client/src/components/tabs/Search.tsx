@@ -3,13 +3,28 @@ import { useState, FormEvent, ChangeEvent } from "react";
 import UserCard from "../user/UserCard";
 import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
-import Chat from "./Chat";
+import Chat from "../chat/Chat";
 
-interface User {
+interface UserCardInfo {
   id: string;
   name: string;
   email: string;
   relevantInfo: string;
+}
+
+interface User {
+  email: string;
+  name: string;
+  about: {
+    gender?: string;
+    campus?: string;
+    major?: string;
+    standing?: string;
+    bio?: string;
+    skills: string[];
+    hobbies: string[];
+    socials: string[];
+  };
 }
 
 interface ChatProps {
@@ -18,7 +33,7 @@ interface ChatProps {
 }
 
 const Search: React.FC<any> = ({ user }) => {
-  const [response, setResponse] = useState<User[]>([]);
+  const [response, setResponse] = useState<UserCardInfo[]>([]);
   const [query, setQuery] = useState<string>("");
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -32,6 +47,16 @@ const Search: React.FC<any> = ({ user }) => {
     setSelectedUser(null);
     setResponse(data);
   };
+
+  const openChat = (sender: User, receiver: User) => {
+    setOpenedChat({ sender, receiver });
+    setSelectedUser(null);
+  };
+
+  const selectUser = (user: any) => {
+    setSelectedUser(user);
+    setOpenedChat(null);
+  }
 
   return (
     <div className="grid grid-cols-2 gap-20">
@@ -53,14 +78,14 @@ const Search: React.FC<any> = ({ user }) => {
 
         <ul className="flex gap-4">
           {response.map((user, index) => (
-            <UserCard key={index} user={user} setSelectedUser={setSelectedUser} />
+            <UserCard key={index} user={user} selectUser={selectUser} />
           ))}
         </ul>
       </div>
 
       <div className="col-span-1">
         {openedChat ? <Chat sender={openedChat.sender} receiver={openedChat.receiver} /> : <></>}
-        {selectedUser ? <SelectedUserCard user={user} selectedUser={selectedUser} setOpenedChat={setOpenedChat} /> : <></>}
+        {selectedUser ? <SelectedUserCard user={user} selectedUser={selectedUser} openChat={openChat} /> : <></>}
       </div>
     </div>
   );

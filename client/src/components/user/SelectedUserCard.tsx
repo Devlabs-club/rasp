@@ -1,4 +1,5 @@
 import React from 'react';
+import { AiOutlineMessage } from "react-icons/ai";
 
 interface User {
   email: string;
@@ -18,10 +19,10 @@ interface User {
 interface SelectedUserCardProps {
   user: User;
   selectedUser: User;
-  setOpenedChat: (chat: { sender: User; receiver: User }) => void;
+  openChat: (sender: User, receiver: User) => void;
 }
 
-const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ user, selectedUser, setOpenedChat }) => {
+const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ user, selectedUser, openChat }) => {
   return (
     <div className={`w-[500px] border border-gray-600 sticky top-10 right-0`}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
@@ -88,12 +89,10 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ user, selectedUser,
           </div>
         </div>
 
-        <p></p>
+        <button className="px-4 py-2 w-fit bg-gradient-to-br from-orange-400 to-orange-600 text-lg text-white mx-3 my-4 flex gap-2 items-center" onClick={() => openChat(user, selectedUser)}>
+          Chat <AiOutlineMessage size="1rem" />
+        </button>
       </div>
-
-      <button className="px-4 py-2 bg-white" onClick={() => setOpenedChat({ sender: user, receiver: selectedUser })}>
-        Chat
-      </button>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import User from "../models/userModel.js";
 import { google } from "googleapis";
-import { Message } from "../models/chatModel.js";
+import Message from "../models/messageModel.js";
 import dotenv from "dotenv";
 dotenv.config();
 
