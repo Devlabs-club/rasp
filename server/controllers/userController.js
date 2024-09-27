@@ -68,18 +68,25 @@ const searchUser = async (req, res, next) => {
     Context: ${JSON.stringify(retrievedDocs.filter(doc => doc.metadata.email !== req.body.user.email))}
     Array:
   `;
-  const retrievedUsers = JSON.parse((await llm.invoke([
-    [
-      "system",
-      `You're an assistant that returns an array of objects in the format 
-      {googleId: <userGoogleId>, relevantInfo: <infoRelevantToQuery>} based on a query.
-      It is very important that you only include users DIRECTLY relevant to the query, don't stretch the meaning of the query too far. 
-      For relevantInformation, generate only detailed information that is directly relevant to the query (max 10 words) in god-perspective.
-      Use the following pieces of retrieved context. If there are no matches, just return an empty array [].
-      Return only an array and NOTHING ELSE no matter what.`,
-    ],
-    ["human", prompt],
-  ])).content);
+
+  let retrievedUsers = []
+  try {
+    retrievedUsers = JSON.parse((await llm.invoke([
+      [
+        "system",
+        `You're an assistant that returns an array of objects in the format 
+        {googleId: <userGoogleId>, relevantInfo: <infoRelevantToQuery>} based on a query.
+        It is very important that you only include users DIRECTLY relevant to the query, don't stretch the meaning of the query too far. 
+        For relevantInformation, generate only detailed information that is directly relevant to the query (max 10 words) in god-perspective.
+        Use the following pieces of retrieved context. If there are no matches, just return an empty array [].
+        Return only an array and NOTHING ELSE no matter what.`,
+      ],
+      ["human", prompt],
+    ])).content);
+  }
+  catch (error) {
+    retrievedUsers = [];
+  }  
   
   const users = [];
   for (const retrievedUser of retrievedUsers) {
