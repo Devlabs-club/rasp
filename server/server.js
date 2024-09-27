@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
       console.log(`User ${userId} disconnected.`);
-      delete connect[userId];
+      delete connectedClients[userId];
   });
 });
 
