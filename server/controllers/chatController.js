@@ -19,7 +19,11 @@ const saveMessages = async (req, res) => {
     sender: req.params.sender,
     receiver: req.params.receiver,
     content: req.body.message,
+<<<<<<< HEAD
     timestamp: Date.now(),
+=======
+    timestamp: Date.now()
+>>>>>>> status
   });
 
   let chat = await Chat.findOne({ users: { $all: [req.params.sender, req.params.receiver] } });

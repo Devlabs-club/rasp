@@ -37,8 +37,8 @@ const saveUser = async (req, res, next) => {
           Socials: ${userData.about.socials.join(", ")} \n
           Projects: ${userData.about.projects} \n
           Experience: ${userData.about.experience} \n
-        `, 
-        metadata: {age: userData.age, gender: userData.gender, location: userData.location} 
+        `.trim(), 
+        metadata: userData.about 
       }
     )
       ,
@@ -90,4 +90,46 @@ const searchUser = async (req, res, next) => {
   res.json(users);
 }
 
-export { saveUser, searchUser };
+const setUserStatus = async (req, res, next) => {
+  const user = await User.findById(req.body.userId);
+  const duration = req.body.duration;
+  const expirationDate = 
+    duration == "24h" ? 
+    new Date(Date.now() + 24 * 60 * 60 * 1000) : (
+      duration == "48h" ? 
+      new Date(Date.now() + 48 * 60 * 60 * 1000) :
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    );
+  const status = {
+    content: req.body.status,
+    expirationDate
+  }
+  user.about = { ...user.about, status };
+
+  await vectorStore.addDocuments([new Document(
+    { 
+      pageContent: `
+        ${user.about.gender} from ASU ${user.about.campus} campus.\n
+        Bio: ${user.about.bio} \n
+        Skills: ${user.about.skills.join(", ")} \n
+        Hobbies: ${user.about.hobbies.join(", ")} \n
+        Socials: ${user.about.socials.join(", ")} \n
+        Projects: ${user.about.projects} \n
+        Experience: ${user.about.experience} \n
+        Status: ${req.body.status} \n
+      `.trim(), 
+      metadata: {...user.about, status } 
+    }
+  )
+    ,
+  ], { ids: [user._id] });
+
+  user.save();
+
+  res
+    .status(201)
+    .json({ message: "User status has been saved" });
+  next();
+}
+
+export { saveUser, searchUser, setUserStatus };

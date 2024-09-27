@@ -4,6 +4,9 @@ import UserCard from "../user/UserCard";
 import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
 import Chat from "../chat/Chat";
+import Input from "../inputs/Input";
+import SelectInput from "../inputs/SelectInput";
+import SubmitButton from "../inputs/SubmitButton";
 
 interface UserCardInfo {
   id: string;
@@ -27,6 +30,11 @@ interface User {
   };
 }
 
+interface Status {
+  content: string;
+  duration: string;
+}
+
 interface ChatProps {
   sender: any;
   receiver: any;
@@ -39,6 +47,11 @@ const Search: React.FC<any> = ({ user, socket }) => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const [openedChat, setOpenedChat] = useState<ChatProps | null>(null);
+
+  const [status, setStatus] = useState<Status>({
+    content: "",
+    duration: ""
+  })
 
   const searchUser = async (e: FormEvent) => {
     e.preventDefault();
@@ -58,6 +71,12 @@ const Search: React.FC<any> = ({ user, socket }) => {
     setOpenedChat(null);
   }
 
+  const setUserStatus = async (e: FormEvent) => {
+    e.preventDefault();
+    const data = await axios.patch("http://localhost:5000/user/status", { status: status.content, duration: status.duration, userId: user._id });
+    console.log(data);
+  }
+
   return (
     <div className="grid grid-cols-2 gap-20">
       <div className="flex flex-col gap-12">
@@ -74,6 +93,16 @@ const Search: React.FC<any> = ({ user, socket }) => {
           <button type="submit" className="px-4 py-2 bg-white text-neutral-800 rounded-md">
             Search
           </button>
+        </form>
+
+        <form>
+          <Input label="Status" name="content" placeholder="What's on your mind?" value={status.content} setValue={(value) => {
+            setStatus(prevStatus => ({ ...prevStatus, content: value }));
+          }} />
+          <SelectInput label="Status Duration" name="duration" options={["24h", "48h", "1w"]} value={status.duration} setValue={(value) => {
+            setStatus(prevStatus => ({ ...prevStatus, duration: value }));
+          }} />
+          <SubmitButton onClick={setUserStatus} />
         </form>
 
         <ul className="flex gap-4">

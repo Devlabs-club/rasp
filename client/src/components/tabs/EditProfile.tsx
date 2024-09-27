@@ -26,6 +26,10 @@ interface User {
         hobbies: string[];
         socials: string[];
         bio: string;
+        status: {
+            content: string,
+            duration: string
+        };
     };
 }
 
@@ -48,7 +52,11 @@ const defaultUser: User = {
         experience: [],
         hobbies: [],
         socials: [],
-        bio: ""
+        bio: "",
+        status: {
+            content: "",
+            duration: ""
+        },
     },
 }
 
@@ -61,7 +69,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
     const saveUser = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await axios.post("http://localhost:5000/user/save", { user: { ...user, ...userData } });
+        const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
         console.log(response);
 
         if (response.status === 201) {

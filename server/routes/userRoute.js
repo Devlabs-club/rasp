@@ -1,9 +1,10 @@
 import express from "express";
-import { saveUser, searchUser } from "../controllers/userController.js";
+import { saveUser, searchUser, setUserStatus } from "../controllers/userController.js";
 
 const router = express.Router();
 
-router.post("/save", saveUser);
+router.patch("/save", saveUser);
 router.post("/search", searchUser);
+router.patch("/status", setUserStatus);
 
 export default router;

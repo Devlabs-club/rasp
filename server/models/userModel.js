@@ -14,6 +14,17 @@ const experienceSchema = new mongoose.Schema({
     skills: [String]
 });
 
+const statusSchema = new mongoose.Schema({
+    content: String,
+    expirationDate: {
+        type: Date,
+        required: true
+    }
+});
+
+// Create the TTL index
+statusSchema.index({ expirationDate: 1 }, { expireAfterSeconds: 0 });
+
 const userSchema = new mongoose.Schema({
     googleId: {
         type: String,
@@ -41,7 +52,8 @@ const userSchema = new mongoose.Schema({
         experience: [experienceSchema],
         hobbies: [String],
         socials: [String],
-        bio: String
+        bio: String,
+        status: statusSchema
     },
     embedding: []
 });
