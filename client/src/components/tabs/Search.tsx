@@ -40,7 +40,7 @@ interface ChatProps {
   receiver: any;
 }
 
-const Search: React.FC<any> = ({ user, socket }) => {
+const Search: React.FC<any> = ({ user }) => {
   const [response, setResponse] = useState<UserCardInfo[]>([]);
   const [query, setQuery] = useState<string>("");
 
@@ -49,7 +49,7 @@ const Search: React.FC<any> = ({ user, socket }) => {
   const [openedChat, setOpenedChat] = useState<ChatProps | null>(null);
 
   const [status, setStatus] = useState<Status>({
-    content: "",
+    content: user?.about?.status?.content || "",
     duration: ""
   })
 
@@ -99,6 +99,12 @@ const Search: React.FC<any> = ({ user, socket }) => {
           <Input label="Status" name="content" placeholder="What's on your mind?" value={status.content} setValue={(value) => {
             setStatus(prevStatus => ({ ...prevStatus, content: value }));
           }} />
+          { user.about?.status?.content ? 
+          <div>
+            <p>Status expires at: {new Date(user.about.status.expirationDate).toLocaleString()}</p>
+          </div>
+          : 
+          <></> }
           <SelectInput label="Status Duration" name="duration" options={["24h", "48h", "1w"]} value={status.duration} setValue={(value) => {
             setStatus(prevStatus => ({ ...prevStatus, duration: value }));
           }} />
@@ -113,7 +119,7 @@ const Search: React.FC<any> = ({ user, socket }) => {
       </div>
 
       <div className="col-span-1">
-        {openedChat ? <Chat sender={openedChat.sender} receiver={openedChat.receiver} socket={socket} /> : <></>}
+        {openedChat ? <Chat sender={openedChat.sender} receiver={openedChat.receiver} /> : <></>}
         {selectedUser ? <SelectedUserCard user={user} selectedUser={selectedUser} openChat={openChat} /> : <></>}
       </div>
     </div>

@@ -19,10 +19,9 @@ interface MessageType {
 interface ChatProps {
   sender: User;
   receiver: User;
-  socket: any;
 }
 
-const Chat: React.FC<ChatProps> = ({ sender, receiver, socket }) => {
+const Chat: React.FC<ChatProps> = ({ sender, receiver }) => {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<MessageType[]>([]);
 
