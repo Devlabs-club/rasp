@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, FormEvent, ChangeEvent } from "react";
+import { useState, FormEvent, ChangeEvent, useContext } from "react";
 import UserCard from "../user/UserCard";
 import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
@@ -7,6 +7,7 @@ import Chat from "../chat/Chat";
 import Input from "../inputs/Input";
 import SelectInput from "../inputs/SelectInput";
 import SubmitButton from "../inputs/SubmitButton";
+import { UserContext } from "../../pages/Dashboard";
 
 interface UserCardInfo {
   id: string;
@@ -15,38 +16,20 @@ interface UserCardInfo {
   relevantInfo: string;
 }
 
-interface User {
-  email: string;
-  name: string;
-  about: {
-    gender?: string;
-    campus?: string;
-    major?: string;
-    standing?: string;
-    bio?: string;
-    skills: string[];
-    hobbies: string[];
-    socials: string[];
-  };
-}
-
 interface Status {
   content: string;
   duration: string;
 }
 
-interface ChatProps {
-  sender: any;
-  receiver: any;
-}
+const Search = () => {
+  const user = useContext(UserContext);
 
-const Search: React.FC<any> = ({ user }) => {
   const [response, setResponse] = useState<UserCardInfo[]>([]);
   const [query, setQuery] = useState<string>("");
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
-  const [openedChat, setOpenedChat] = useState<ChatProps | null>(null);
+  const [receiver, setReceiver] = useState<any>(null);
 
   const [status, setStatus] = useState<Status>({
     content: user?.about?.status?.content || "",
@@ -61,19 +44,19 @@ const Search: React.FC<any> = ({ user }) => {
     setResponse(data);
   };
 
-  const openChat = (sender: User, receiver: User) => {
-    setOpenedChat({ sender, receiver });
+  const openChat = (sender: any, receiver: any) => {
+    setReceiver(receiver);
     setSelectedUser(null);
   };
 
   const selectUser = (user: any) => {
     setSelectedUser(user);
-    setOpenedChat(null);
+    setReceiver(null);
   }
 
   const setUserStatus = async (e: FormEvent) => {
     e.preventDefault();
-    const data = await axios.patch("http://localhost:5000/user/status", { status: status.content, duration: status.duration, userId: user._id });
+    const data = await axios.patch("http://localhost:5000/user/status", { status: status.content, duration: status.duration, userId: user?._id });
     console.log(data);
   }
 
@@ -99,9 +82,9 @@ const Search: React.FC<any> = ({ user }) => {
           <Input label="Status" name="content" placeholder="What's on your mind?" value={status.content} setValue={(value) => {
             setStatus(prevStatus => ({ ...prevStatus, content: value }));
           }} />
-          { user.about?.status?.content ? 
+          { user?.about?.status?.content ? 
           <div>
-            <p>Status expires at: {new Date(user.about.status.expirationDate).toLocaleString()}</p>
+            <p>Status expires at: {new Date(user?.about.status?.expirationDate).toLocaleString()}</p>
           </div>
           : 
           <></> }
@@ -119,8 +102,8 @@ const Search: React.FC<any> = ({ user }) => {
       </div>
 
       <div className="col-span-1">
-        {openedChat ? <Chat sender={openedChat.sender} receiver={openedChat.receiver} /> : <></>}
-        {selectedUser ? <SelectedUserCard user={user} selectedUser={selectedUser} openChat={openChat} /> : <></>}
+        {receiver ? <Chat receiver={receiver} /> : <></>}
+        {selectedUser ? <SelectedUserCard selectedUser={selectedUser} openChat={openChat} /> : <></>}
       </div>
     </div>
   );

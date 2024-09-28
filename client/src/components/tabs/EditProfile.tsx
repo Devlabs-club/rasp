@@ -1,5 +1,6 @@
 import axios from "axios";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useContext } from "react";
+import { UserContext } from "../../pages/Dashboard";
 
 import Input from "../inputs/Input";
 import ArrayInput from "../inputs/ArrayInput";
@@ -11,38 +12,10 @@ import SubmitButton from "../inputs/SubmitButton";
 import Heading from "../text/Heading";
 import EditUserCard from "../user/EditUserCard";
 
-interface User {
-    name: string;
-    email: string;
-    about: {
-        dateOfBirth: Date | null;
-        gender: string;
-        campus: string;
-        standing: string;
-        major: string;
-        skills: string[];
-        projects: object[];
-        experience: object[];
-        hobbies: string[];
-        socials: string[];
-        bio: string;
-        status: {
-            content: string,
-            duration: string
-        };
-    };
-}
-
-interface UserProfileProps {
-    user: User;
-    setUser: React.Dispatch<React.SetStateAction<User>>;
-}
-
-const defaultUser: User = {
+const defaultUser: any = {
     name: "",
     email: "",
     about: {
-        dateOfBirth: null,
         gender: "",
         campus: "",
         standing: "",
@@ -55,13 +28,16 @@ const defaultUser: User = {
         bio: "",
         status: {
             content: "",
-            duration: ""
+            duration: "",
+            expirationDate: new Date()
         },
     },
 }
 
-const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
-    const [userData, setUserData] = useState<User>({
+const UserProfile = () => {
+    const user = useContext(UserContext);
+
+    const [userData, setUserData] = useState<any>({
         ...defaultUser,
         ...user
     });
@@ -71,10 +47,6 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
 
         const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
         console.log(response);
-
-        if (response.status === 201) {
-            setUser(user => ({ ...user, ...userData }));
-        }
     };
 
     return (
@@ -89,7 +61,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
                         placeholder="e.g. forrest gump"
                         value={userData.name}
                         setValue={(value: string) => {
-                            setUserData(userData => ({ ...userData, name: value }));
+                            setUserData((userData: any) => ({ ...userData, name: value }));
                         }}
                     />
                     <SelectInput
@@ -98,7 +70,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
                         options={["male", "female", "other"]}
                         value={userData.about.gender}
                         setValue={(value: string) => {
-                            setUserData(userData => ({ ...userData, about: { ...userData.about, gender: value } }));
+                            setUserData((userData: any) => ({ ...userData, about: { ...userData.about, gender: value } }));
                         }}
                     />
                     <SelectInput
@@ -107,7 +79,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
                         options={["tempe", "downtown phoenix", "polytechnic", "online"]}
                         value={userData.about.campus}
                         setValue={(value: string) => {
-                            setUserData(userData => ({ ...userData, about: { ...userData.about, campus: value } }));
+                            setUserData((userData: any) => ({ ...userData, about: { ...userData.about, campus: value } }));
                         }}
                     />
                     <SelectInput
@@ -116,7 +88,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
                         options={["freshman", "sophomore", "junior", "senior", "masters", "phd"]}
                         value={userData.about.standing}
                         setValue={(value: string) => {
-                            setUserData(userData => ({ ...userData, about: { ...userData.about, standing: value } }));
+                            setUserData((userData: any) => ({ ...userData, about: { ...userData.about, standing: value } }));
                         }}
                     />
                     <Input
@@ -125,7 +97,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
                         placeholder="e.g. economics"
                         value={userData.about.major}
                         setValue={(value: string) => {
-                            setUserData(userData => ({ ...userData, about: { ...userData.about, major: value } }));
+                            setUserData((userData: any) => ({ ...userData, about: { ...userData.about, major: value } }));
                         }}
                     />
                     <ArrayInput
@@ -133,21 +105,21 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, setUser }) => {
                         name="skills"
                         placeholder="e.g. running, business, etc."
                         items={userData.about.skills}
-                        setItems={(items: string[]) => setUserData(userData => ({ ...userData, about: { ...userData.about, skills: items } }))}
+                        setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, skills: items } }))}
                     />
                     <ArrayInput
                         label="your hobbies"
                         name="hobbies"
                         placeholder="e.g. ping-pong, shrimping, etc."
                         items={userData.about.hobbies}
-                        setItems={(items: string[]) => setUserData(userData => ({ ...userData, about: { ...userData.about, hobbies: items } }))}
+                        setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, hobbies: items } }))}
                     />
                     <ArrayInput
                         label="your socials"
                         name="socials"
                         placeholder="e.g. instagram, github, etc."
                         items={userData.about.socials}
-                        setItems={(items: string[]) => setUserData(userData => ({ ...userData, about: { ...userData.about, socials: items } }))}
+                        setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, socials: items } }))}
                     />
                     {/* <ProjectInput items={userData.about.projects} setItems={(items) => setUserData(userData => {
                                         return {...userData, about: {...userData.about, projects: items}};

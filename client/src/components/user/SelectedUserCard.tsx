@@ -1,28 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { AiOutlineMessage } from "react-icons/ai";
-
-interface User {
-  email: string;
-  name: string;
-  about: {
-    gender?: string;
-    campus?: string;
-    major?: string;
-    standing?: string;
-    bio?: string;
-    skills: string[];
-    hobbies: string[];
-    socials: string[];
-  };
-}
+import { UserContext } from '../../pages/Dashboard';
 
 interface SelectedUserCardProps {
-  user: User;
-  selectedUser: User;
-  openChat: (sender: User, receiver: User) => void;
+  selectedUser: any;
+  openChat: (sender: any, receiver: any) => void;
 }
 
-const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ user, selectedUser, openChat }) => {
+const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openChat }) => {
+  const user = useContext(UserContext);
   return (
     <div className={`w-[500px] border border-gray-600 sticky top-10 right-0`}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
@@ -59,7 +45,7 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ user, selectedUser,
         <div className="px-3 py-4 flex flex-col gap-2 border border-gray-600">
           <h2 className="text-lg font-semibold flex gap-2 items-center">skills</h2>
           <div className="text-neutral-200 flex flex-wrap gap-2">
-            {selectedUser.about.skills.map((value, index) => (
+            {selectedUser.about.skills.map((value: string, index: number) => (
               <span className="text-neutral-300 px-2 py-1 text-sm rounded-md bg-neutral-700" key={index}>
                 {value}
               </span>
@@ -70,7 +56,7 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ user, selectedUser,
         <div className="px-3 py-4 flex flex-col gap-2 border border-gray-600">
           <h2 className="text-lg font-semibold flex gap-2 items-center">hobbies</h2>
           <div className="text-neutral-200 flex flex-wrap gap-2">
-            {selectedUser.about.hobbies.map((value, index) => (
+            {selectedUser.about.hobbies.map((value: string, index: number) => (
               <span className="text-neutral-300 px-2 py-1 text-sm rounded-md bg-neutral-700" key={index}>
                 {value}
               </span>
@@ -81,7 +67,7 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ user, selectedUser,
         <div className="px-3 py-4 flex flex-col gap-2 border border-gray-600">
           <h2 className="text-lg font-semibold flex gap-2 items-center">socials</h2>
           <div className="text-neutral-200 flex flex-wrap gap-2">
-            {selectedUser.about.socials.map((value, index) => (
+            {selectedUser.about.socials.map((value: string, index: number) => (
               <a href={value} className="text-neutral-300 px-2 py-1 text-sm rounded-md bg-neutral-700" key={index}>
                 {value.split('/')[2].split('.')[0]}
               </a>

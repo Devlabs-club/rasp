@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { UserContext } from '../../pages/Dashboard';
 
 import Message from './Message';
-
-interface User {
-  _id: string;
-  name: string;
-}
 
 interface MessageType {
   content: string;
@@ -17,26 +13,27 @@ interface MessageType {
 }
 
 interface ChatProps {
-  sender: User;
-  receiver: User;
+  receiver: any;
 }
 
-const Chat: React.FC<ChatProps> = ({ sender, receiver }) => {
+const Chat: React.FC<ChatProps> = ({ receiver }) => {
+  const user = useContext(UserContext);
+
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<MessageType[]>([]);
 
-  const getMessages = async (sender: User, receiver: User) => {
+  const getMessages = async (user: any, receiver: any) => {
     // fetch messages from the server
-    const response = await axios.get<MessageType[]>(`http://localhost:5000/chat/get/${sender._id}/${receiver._id}`);
+    const response = await axios.get<MessageType[]>(`http://localhost:5000/chat/get/${user._id}/${receiver._id}`);
     setMessages(response.data);
   }
 
   useEffect(() => {
     // This function will only run once, on the initial render
-    getMessages(sender, receiver);
+    getMessages(user, receiver);
     
     const socket = io('http://localhost:5000', {
-      query: { userId: sender._id } // Pass the userId when connecting to the server
+      query: { userId: user._id } // Pass the userId when connecting to the server
     });
 
     socket.on('message', async (newMessage: any) => {
@@ -46,9 +43,9 @@ const Chat: React.FC<ChatProps> = ({ sender, receiver }) => {
     return () => {
       socket.disconnect();
     }
-  }, [sender, receiver]);
+  }, [user, receiver]);
 
-  const saveMessage = async (sender: User, receiver: User) => {
+  const saveMessage = async (sender: any, receiver: any) => {
     // save messages to the server
     const response = (await axios.post<MessageType>(`http://localhost:5000/chat/save/${sender._id}/${receiver._id}`, { message }));
     console.log(response);
@@ -68,13 +65,13 @@ const Chat: React.FC<ChatProps> = ({ sender, receiver }) => {
         <div className='flex flex-col gap-2'>
           {messages.map((message, index) => {
             return (
-              <Message key={index} content={message.content} timestamp={message.timestamp} isSender={message.sender === sender._id} />
+              <Message key={index} content={message.content} timestamp={message.timestamp} isSender={message.sender === user._id} />
             );
           })}
         </div>
 
         <input className="text-black" type="text" placeholder="Type your message here" value={message} onChange={(e) => setMessage(e.target.value)} />
-        <button onClick={() => saveMessage(sender, receiver)}>Send Message</button>
+        <button onClick={() => saveMessage(user, receiver)}>Send Message</button>
       </div>
       
     </div>

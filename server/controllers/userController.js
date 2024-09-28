@@ -3,6 +3,7 @@ import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
+import connectedClients from "../utils/connectedClients.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -138,5 +139,16 @@ const setUserStatus = async (req, res, next) => {
     .json({ message: "User status has been saved" });
   next();
 }
+
+const userChangeStream = User.watch();
+userChangeStream.on('change', async (change) => {
+  const userData = change.fullDocument;
+
+  const user = await User.findById(userData?._id);
+
+  if (connectedClients[userData?._id]) {
+    connectedClients[userData?._id].emit('user-update', user);
+  }
+});
 
 export { saveUser, searchUser, setUserStatus };
