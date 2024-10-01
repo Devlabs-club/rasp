@@ -21,6 +21,7 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
 
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<MessageType[]>([]);
+  const [chats, setChats] = useState<any[]>([]);
 
   const getMessages = async (user: any, receiver: any) => {
     // fetch messages from the server
@@ -28,9 +29,15 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
     setMessages(response.data);
   }
 
+  const getChats = async (user: any) => {
+    const response = await axios.get(`http://localhost:5000/chat/getall/${user._id}`);
+    setChats(response.data);
+  }
+
   useEffect(() => {
     // This function will only run once, on the initial render
     getMessages(user, receiver);
+    getChats(user);
     
     const socket = io('http://localhost:5000', {
       query: { userId: user._id } // Pass the userId when connecting to the server
@@ -57,7 +64,16 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
   return (
     <div className="bg-neutral-800 grid grid-cols-3">
       <div className="col-span-1">
-
+        {chats.map((chat, index) => {
+            return (
+              <div>
+                <p>{chat.receiverName}</p>
+                <p>{chat.lastMessage.content} {chat.lastMessage.timestamp}</p>
+                <hr />
+              </div>
+            );
+          })
+        }
       </div>
       <div className="col-span-2">
         <h1>Send a message to {receiver.name}</h1>

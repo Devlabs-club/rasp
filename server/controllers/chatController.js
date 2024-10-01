@@ -1,6 +1,22 @@
 import Chat from '../models/chatModel.js';
 import Message from '../models/messageModel.js';
+import User from '../models/userModel.js';
 import connectedClients from '../utils/connectedClients.js';
+
+const getChats = async (req, res) => {
+  const chatDocuments = await Chat.find({ users: req.params.userId });
+  const chats = [];
+  for (const chat of chatDocuments) {
+    const lastMessage = await Message.findById(chat.messages[chat.messages.length - 1]);
+    const receiverName = (await User.findById(chat.users.find(userId => userId != req.params.userId)))?.name;
+    chats.push(
+      {...chat, 
+        lastMessage,
+        receiverName 
+      });
+  }
+  res.json(chats);
+}
 
 const getMessages = async (req, res) => {
   const messageIds = (await Chat.findOne({ users: { $all: [req.params.sender, req.params.receiver] } }))?.messages || [];
@@ -27,6 +43,7 @@ const saveMessages = async (req, res) => {
     chat = await Chat.create({users: [req.params.sender, req.params.receiver], messages: []});
   }
   chat.messages = [...chat.messages, newMessage._id];
+  chat.lastMessage = newMessage;
   chat.save();
   
   res.status(201).json("Success");
@@ -48,4 +65,4 @@ messageChangeStream.on('change', async (change) => {
   }
 });
 
-export { getMessages, saveMessages };
+export { getMessages, saveMessages, getChats };

@@ -13,7 +13,7 @@ const chatSchema = new Schema({
             ref: 'Message' 
         }
     ],
-    createdAt: { type: Date, default: Date.now }, // When the chat was created
+    createdAt: { type: Date, default: Date.now },
 });
 
 export default mongoose.model("Chat", chatSchema);
