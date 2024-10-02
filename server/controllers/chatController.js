@@ -44,6 +44,8 @@ const saveMessages = async (req, res) => {
   }
   chat.messages = [...chat.messages, newMessage._id];
   chat.lastMessage = newMessage;
+  // sort chat in descending order of timestamp
+  chat.sort((a, b) => b.timestamp - a.timestamp);
   chat.save();
   
   res.status(201).json("Success");
@@ -62,6 +64,19 @@ messageChangeStream.on('change', async (change) => {
   }
   if (connectedClients[messageData?.receiver]) {
     connectedClients[messageData?.receiver].emit('message', message);
+  }
+});
+
+const chatChangeStream = Chat.watch();
+chatChangeStream.on('change', async (change) => {
+  const chatData = change.fullDocument;
+
+  const chat = await Chat.findById(chatData?._id);
+
+  for (const user of chatData?.users) {
+    if (connectedClients[user]) {
+      connectedClients[user].emit('chat', chat);
+    }
   }
 });
 

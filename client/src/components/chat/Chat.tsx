@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import io from 'socket.io-client';
-import { UserContext } from '../../pages/Dashboard';
+import { UserContext, SocketContext } from '../../pages/Dashboard';
 
 import Message from './Message';
 
@@ -17,6 +16,7 @@ interface ChatProps {
 }
 
 const Chat: React.FC<ChatProps> = ({ receiver }) => {
+  const socket = useContext(SocketContext);
   const user = useContext(UserContext);
 
   const [message, setMessage] = useState<string>("");
@@ -38,19 +38,15 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
     // This function will only run once, on the initial render
     getMessages(user, receiver);
     getChats(user);
-    
-    const socket = io('http://localhost:5000', {
-      query: { userId: user._id } // Pass the userId when connecting to the server
-    });
 
-    socket.on('message', async (newMessage: any) => {
+    socket.current?.on('message', async (newMessage: any) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);    
     });
 
-    return () => {
-      socket.disconnect();
-    }
-  }, [user, receiver]);
+    socket.current?.on('chat', async (chat: any) => {
+      setChats(chats => [chat, ...chats.filter((c) => c._id !== chat._id)]);
+    });
+  }, [user, socket, receiver]);
 
   const saveMessage = async (sender: any, receiver: any) => {
     // save messages to the server
