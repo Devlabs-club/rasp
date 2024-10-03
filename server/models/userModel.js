@@ -1,18 +1,18 @@
 import mongoose from "mongoose";
 
-const projectSchema = new mongoose.Schema({
-    name: String,
-    description: String,
-    tools: [String],
-    links: [String]
-});
+// const projectSchema = new mongoose.Schema({
+//     name: String,
+//     description: String,
+//     tools: [String],
+//     links: [String]
+// });
 
-const experienceSchema = new mongoose.Schema({
-    role: String,
-    company: String,
-    description: String,
-    skills: [String]
-});
+// const experienceSchema = new mongoose.Schema({
+//     role: String,
+//     company: String,
+//     description: String,
+//     skills: [String]
+// });
 
 const statusSchema = new mongoose.Schema({
     content: String,
@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    photo: Buffer,
+    photo: String,
     about: {
         dateOfBirth: Date,
         gender: String,
@@ -48,8 +48,6 @@ const userSchema = new mongoose.Schema({
         standing: String,
         major: String,
         skills: [String],
-        projects: [projectSchema],        
-        experience: [experienceSchema],
         hobbies: [String],
         socials: [String],
         bio: String,

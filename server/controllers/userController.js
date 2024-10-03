@@ -25,6 +25,7 @@ const saveUser = async (req, res, next) => {
     const userData = req.body.user;
     const user = await User.findOne({ googleId: userData.googleId });
     user.name = userData.name;
+    user.photo = userData.photo;
     user.about = { ...userData.about };
     user.save();
 
@@ -38,6 +39,7 @@ const saveUser = async (req, res, next) => {
           Socials: ${userData.about.socials.join(", ")} \n
           Projects: ${userData.about.projects} \n
           Experience: ${userData.about.experience} \n
+          ${ userData.about.status ? `Status: ${userData.about.status.content}` : "" }
         `.trim(), 
         metadata: userData.about 
       }
@@ -63,6 +65,9 @@ const llm = new ChatGoogleGenerativeAI({
 
 const searchUser = async (req, res, next) => {
   const retrievedDocs = await vectorStore.similaritySearch(req.body.query, 5);
+  retrievedDocs.forEach(doc => {
+    delete doc.metadata.photo;
+  });
 
   const prompt = `
     Query: ${req.body.query}
@@ -86,8 +91,11 @@ const searchUser = async (req, res, next) => {
     ])).content);
   }
   catch (error) {
+    console.error(error);
     retrievedUsers = [];
   }  
+
+  console.log(retrievedUsers);
   
   const users = [];
   for (const retrievedUser of retrievedUsers) {

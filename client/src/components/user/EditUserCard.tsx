@@ -3,6 +3,7 @@ import React from 'react';
 interface User {
   email: string;
   name: string;
+  photo: any;
   about: {
     gender?: string;
     campus?: string;
@@ -24,7 +25,7 @@ const EditUserCard: React.FC<EditUserCardProps> = ({ user }) => {
     <div className={`w-[500px] border border-gray-600 sticky top-10 right-0`}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
         <img
-          src={`/images/${user.email}.jpg`}
+          src={user.photo.startsWith("http") ? user.photo : atob(user.photo.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''))}
           alt={user.name}
           className="w-full aspect-video object-cover border border-gray-600 mix-blend-multiply"
         />

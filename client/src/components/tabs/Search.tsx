@@ -13,6 +13,7 @@ interface UserCardInfo {
   id: string;
   name: string;
   email: string;
+  photo: any;
   relevantInfo: string;
 }
 

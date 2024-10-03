@@ -73,7 +73,7 @@ chatChangeStream.on('change', async (change) => {
 
   const chat = await Chat.findById(chatData?._id);
 
-  for (const user of chatData?.users) {
+  for (const user of (chatData?.users || [])) {
     if (connectedClients[user]) {
       connectedClients[user].emit('chat', chat);
     }

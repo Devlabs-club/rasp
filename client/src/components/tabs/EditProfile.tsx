@@ -11,10 +11,12 @@ import TextBox from "../inputs/TextBox";
 import SubmitButton from "../inputs/SubmitButton";
 import Heading from "../text/Heading";
 import EditUserCard from "../user/EditUserCard";
+import ProfilePictureInput from "../inputs/ProfilePictureInput";
 
 const defaultUser: any = {
     name: "",
     email: "",
+    photo: null,
     about: {
         gender: "",
         campus: "",
@@ -55,6 +57,10 @@ const UserProfile = () => {
                 <Heading>Enter your information</Heading>
 
                 <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-6 col-span-1">
+                    <ProfilePictureInput label="Upload your profile picture" name="pfp" setPhoto={(photo: any) => {
+                        setUserData((userData: any) => ({ ...userData, photo: btoa(photo) }));
+                    }} />
+                    
                     <Input
                         label="your name"
                         name="name"
@@ -121,12 +127,6 @@ const UserProfile = () => {
                         items={userData.about.socials}
                         setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, socials: items } }))}
                     />
-                    {/* <ProjectInput items={userData.about.projects} setItems={(items) => setUserData(userData => {
-                                        return {...userData, about: {...userData.about, projects: items}};
-                                })} />
-                                <ExperienceInput items={userData.about.experience} setItems={(items) => setUserData(userData => {
-                                        return {...userData, about: {...userData.about, experience: items}};
-                                })} /> */}
                     <TextBox
                         label="anything else about you"
                         name="bio"
@@ -134,6 +134,7 @@ const UserProfile = () => {
                         value={userData.about.bio}
                         setValue={(value: string) => setUserData({ ...userData, about: { ...userData.about, bio: value } })}
                     />
+                    
                     <SubmitButton onClick={saveUser} />
                 </form>
             </div>
