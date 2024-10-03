@@ -150,12 +150,12 @@ const setUserStatus = async (req, res, next) => {
 
 const userChangeStream = User.watch();
 userChangeStream.on('change', async (change) => {
-  const userData = change.fullDocument;
+  const userId = change.documentKey._id;
 
-  const user = await User.findById(userData?._id);
+  const user = await User.findById(userId);
 
-  if (connectedClients[userData?._id]) {
-    connectedClients[userData?._id].emit('user-update', user);
+  if (connectedClients[userId]) {
+    connectedClients[userId].emit('user-update', user);
   }
 });
 
