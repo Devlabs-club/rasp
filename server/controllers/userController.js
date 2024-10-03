@@ -111,10 +111,10 @@ const setUserStatus = async (req, res, next) => {
   const duration = req.body.duration;
   const expirationDate = 
     duration == "24h" ? 
-    new Date(Date.now() + 24 * 60 * 60 * 1000) : (
+    new Date(Date.now() + 60 * 1000) : (
       duration == "48h" ? 
-      new Date(Date.now() + 48 * 60 * 60 * 1000) :
-      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      new Date(Date.now() + 2 * 60 * 1000) :
+      new Date(Date.now() + 7 * 60 * 1000)
     );
   const status = {
     content: req.body.status,

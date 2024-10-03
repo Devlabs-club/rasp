@@ -16,7 +16,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, selectUser }) => {
   return (
     <div className='w-52 border border-gray-600' onClick={() => selectUser(user)}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
-        <img src={user.photo.startsWith("http") ? user.photo : atob(user.photo.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''))} alt={user.name} className='w-full object-cover border border-gray-600 mix-blend-multiply' />
+        <img src={user.photo} alt={user.name} className='w-full object-cover border border-gray-600 mix-blend-multiply' />
       </div>
       
       <div className='flex flex-col gap-2 px-3 py-5'>

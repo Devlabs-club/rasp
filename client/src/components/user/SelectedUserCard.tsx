@@ -13,7 +13,7 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openC
     <div className={`w-[500px] border border-gray-600 sticky top-10 right-0`}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
         <img
-          src={selectedUser.photo.startsWith("http") ? selectedUser.photo : atob(selectedUser.photo.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''))}
+          src={selectedUser.photo}
           alt={selectedUser.name}
           className="w-full aspect-video object-cover border border-gray-600 mix-blend-multiply"
         />

@@ -58,7 +58,7 @@ const UserProfile = () => {
 
                 <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-6 col-span-1">
                     <ProfilePictureInput label="Upload your profile picture" name="pfp" setPhoto={(photo: any) => {
-                        setUserData((userData: any) => ({ ...userData, photo: btoa(photo) }));
+                        setUserData((userData: any) => ({ ...userData, photo }));
                     }} />
                     
                     <Input
