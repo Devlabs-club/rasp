@@ -2,8 +2,7 @@ import { pipeline } from '@xenova/transformers';
 
 const getEmbedding = async (data) => {
   const embedder = await pipeline(
-    'feature-extraction', 
-    'mixedbread-ai/mxbai-embed-large-v1');
+    'sentence-similarity', 'Alibaba-NLP/gte-large-en-v1.5');
   const response = await embedder(data, { pooling: 'mean', normalize: true });
   return Array.from(response.data);
 }

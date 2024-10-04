@@ -1,6 +1,6 @@
 import Chat from '../models/chatModel.js';
 import Message from '../models/messageModel.js';
-import User from '../models/userModel.js';
+import { User } from '../models/userModel.js';
 import connectedClients from '../utils/connectedClients.js';
 
 const getChats = async (req, res) => {

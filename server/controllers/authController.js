@@ -1,4 +1,4 @@
-import User from "../models/userModel.js";
+import { User } from "../models/userModel.js";
 import { google } from "googleapis";
 import { jwtDecode } from 'jwt-decode';
 import dotenv from "dotenv";
