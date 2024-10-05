@@ -42,11 +42,9 @@ const saveUser = async (req, res, next) => {
           Projects: ${userData.about.projects} \n
           Experience: ${userData.about.experience} \n
           ${ status ? `Status: ${status}` : "" }
-        `.trim(), 
-        metadata: userData.about 
+        `.trim()
       }
-    )
-      ,
+    ),
     ], { ids: [user._id] });
     
     res
@@ -106,6 +104,11 @@ const searchUser = async (req, res, next) => {
   res.json(users);
 }
 
+const getUserStatus = async (req, res, next) => {
+  const status = await Status.findOne({ userId: req.params.userId });
+  res.json(status);
+}
+
 const setUserStatus = async (req, res, next) => {
   const duration = req.body.duration;
   const expirationDate = 
@@ -142,12 +145,11 @@ const setUserStatus = async (req, res, next) => {
         Projects: ${user.about.projects} \n
         Experience: ${user.about.experience} \n
         Status: ${req.body.status} \n
-      `.trim(), 
-      metadata: {...user.about, status } 
+      `.trim()
     }
-  )
-    ,
+  ),
   ], { ids: [user._id] });
+  user.statusId = status._id;
 
   user.save();
 
@@ -168,4 +170,34 @@ userChangeStream.on('change', async (change) => {
   }
 });
 
-export { saveUser, searchUser, setUserStatus };
+const statusChangeStream = Status.watch();
+statusChangeStream.on('change', async (change) => {
+  if (change.operationType !== 'delete') return;
+  const statusId = change.documentKey._id;
+  const user = await User.findOne({ statusId });
+
+  if(user) {
+    await vectorStore.addDocuments([new Document(
+      { 
+        pageContent: `
+          ${user.about.gender} from ASU ${user.about.campus} campus.\n
+          Bio: ${user.about.bio} \n
+          Skills: ${user.about.skills.join(", ")} \n
+          Hobbies: ${user.about.hobbies.join(", ")} \n
+          Socials: ${user.about.socials.join(", ")} \n
+          Projects: ${user.about.projects} \n
+          Experience: ${user.about.experience} \n
+        `.trim()
+      }
+    ),
+    ], { ids: [user._id] });
+    user.save();
+  
+    if (connectedClients[user._id]) {
+      connectedClients[user._id].emit('status-delete', { content: "", duration: "" });
+    }
+  }  
+});
+
+
+export { saveUser, searchUser, setUserStatus, getUserStatus };

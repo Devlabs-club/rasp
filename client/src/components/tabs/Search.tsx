@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, FormEvent, ChangeEvent, useContext } from "react";
+import { useState, FormEvent, ChangeEvent, useContext, useEffect } from "react";
 import UserCard from "../user/UserCard";
 import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
@@ -7,7 +7,7 @@ import Chat from "../chat/Chat";
 import Input from "../inputs/Input";
 import SelectInput from "../inputs/SelectInput";
 import SubmitButton from "../inputs/SubmitButton";
-import { UserContext } from "../../pages/Dashboard";
+import { UserContext, SocketContext } from "../../pages/Dashboard";
 
 interface UserCardInfo {
   id: string;
@@ -24,6 +24,7 @@ interface Status {
 
 const Search = () => {
   const user = useContext(UserContext);
+  const socket = useContext(SocketContext);
 
   const [response, setResponse] = useState<UserCardInfo[]>([]);
   const [query, setQuery] = useState<string>("");
@@ -33,9 +34,23 @@ const Search = () => {
   const [receiver, setReceiver] = useState<any>(null);
 
   const [status, setStatus] = useState<Status>({
-    content: user?.about?.status?.content || "",
+    content: "",
     duration: ""
   })
+
+  useEffect(() => {
+    const getStatus = async () => {
+      const userStatus = await axios.get(`http://localhost:5000/user/status/${user?._id}`);
+      if (userStatus?.data) {
+        setStatus(userStatus.data);
+      }
+    }
+    getStatus();
+
+    socket.current?.on('status-delete', async (updatedStatus: any) => {
+      setStatus(updatedStatus);    
+    });
+  }, [user._id, socket]);
 
   const searchUser = async (e: FormEvent) => {
     e.preventDefault();

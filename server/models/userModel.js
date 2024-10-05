@@ -1,5 +1,21 @@
 import mongoose from "mongoose";
 
+const statusSchema = new mongoose.Schema({
+    content: String,
+    expirationDate: {
+        type: Date,
+        required: true
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }
+});
+// Create the TTL index
+statusSchema.index({ expirationDate: 1 }, { expireAfterSeconds: 0 });
+
+const Status = mongoose.model("Status", statusSchema);
+
 const userSchema = new mongoose.Schema({
     googleId: {
         type: String,
@@ -27,25 +43,13 @@ const userSchema = new mongoose.Schema({
         socials: [String],
         bio: String,
     },
+    statusId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Status"
+    },
     embedding: []
 });
 
 const User = mongoose.model("User", userSchema);
-
-const statusSchema = new mongoose.Schema({
-    content: String,
-    user: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', required: true 
-    },
-    expirationDate: {
-        type: Date,
-        required: true
-    }
-});
-// Create the TTL index
-statusSchema.index({ expirationDate: 1 }, { expireAfterSeconds: 0 });
-
-const Status = mongoose.model("Status", statusSchema);
 
 export { User, Status };
