@@ -58,7 +58,9 @@ const Search = () => {
   const setUserStatus = async (e: FormEvent) => {
     e.preventDefault();
     const data = await axios.patch("http://localhost:5000/user/status", { status: status.content, duration: status.duration, userId: user?._id });
-    console.log(data);
+    if (data.status === 201) {
+      console.log("status updated successfully");
+    }
   }
 
   return (

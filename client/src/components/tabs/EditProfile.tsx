@@ -48,7 +48,9 @@ const UserProfile = () => {
         e.preventDefault();
 
         const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
-        console.log(response);
+        if (response.status === 201) {
+            console.log("user saved successfully");
+        }
     };
 
     return (
@@ -121,11 +123,11 @@ const UserProfile = () => {
                         setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, hobbies: items } }))}
                     />
                     <ArrayInput
-                        label="your socials"
+                        label="your socials (must start with http/https)"
                         name="socials"
-                        placeholder="e.g. instagram, github, etc."
+                        placeholder="e.g. linkedin, github, etc."
                         items={userData.about.socials}
-                        setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, socials: items } }))}
+                        setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, socials: items.filter(item => item.startsWith("http")) } }))}
                     />
                     <TextBox
                         label="anything else about you"

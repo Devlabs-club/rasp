@@ -55,7 +55,7 @@ const ProfilePictureInput: React.FC<InputProps> = ({ label, name, setPhoto }) =>
       setPhoto(optimizedPhoto);
     }
     reader.onerror = (error) => {
-      console.log('Error: ', error);
+      console.error('Error: ', error);
     }
   }
 

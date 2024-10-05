@@ -96,8 +96,6 @@ const searchUser = async (req, res, next) => {
     console.error(error);
     retrievedUsers = [];
   }  
-
-  console.log(retrievedUsers);
   
   const users = [];
   for (const retrievedUser of retrievedUsers) {
@@ -112,10 +110,10 @@ const setUserStatus = async (req, res, next) => {
   const duration = req.body.duration;
   const expirationDate = 
     duration == "24h" ? 
-    new Date(Date.now() + 24 * 60 * 60 * 1000) : (
+    new Date(Date.now() + 60 * 1000) : (
       duration == "48h" ? 
-      new Date(Date.now() + 2 * 24 * 60 * 60 * 1000) :
-      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      new Date(Date.now() + 2 * 60 * 1000) :
+      new Date(Date.now() + 7 * 60 * 1000)
     );
   let status = await Status.findOne({ user: req.body.userId });
   if (status) {

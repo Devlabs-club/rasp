@@ -81,7 +81,7 @@ const EditUserCard: React.FC<EditUserCardProps> = ({ user }) => {
           <div className="text-neutral-200 flex flex-wrap gap-2">
             {user.about.socials.map((value, index) => (
               <a href={value} className="text-neutral-300 px-2 py-1 text-sm rounded-md bg-neutral-700" key={index}>
-                {value.split('/')[2].split('.')[0]}
+                {value.startsWith("http") ? value.split('/')[2].split('.')[0] : ""}
               </a>
             ))}
           </div>

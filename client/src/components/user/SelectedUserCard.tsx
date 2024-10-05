@@ -69,7 +69,7 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openC
           <div className="text-neutral-200 flex flex-wrap gap-2">
             {selectedUser.about.socials.map((value: string, index: number) => (
               <a href={value} className="text-neutral-300 px-2 py-1 text-sm rounded-md bg-neutral-700" key={index}>
-                {value.split('/')[2].split('.')[0]}
+                {value.startsWith("http") ? value.split('/')[2].split('.')[0] : value.split('.')[0]}
               </a>
             ))}
           </div>

@@ -51,7 +51,6 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
   const saveMessage = async (sender: any, receiver: any) => {
     // save messages to the server
     const response = (await axios.post<MessageType>(`http://localhost:5000/chat/save/${sender._id}/${receiver._id}`, { message }));
-    console.log(response);
     if (response.status === 201) {
       setMessage("");
     }
