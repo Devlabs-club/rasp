@@ -51,6 +51,68 @@ const saveMessages = async (req, res) => {
   res.status(201).json("Success");
 }
 
+const createGroupChat = async (req, res) => {
+  const { admin, users, name } = req.body;
+
+  const chat = await Chat.create({
+    users: [admin, ...users],
+    groupName: name,
+    admin,
+    messages: [],
+    isGroupChat: true,
+    pendingApprovals: users
+  });
+
+  res.status(201).json(chat);
+}
+
+const updateGroupChat = async (req, res) => {
+  const { chatId, name, users, admin } = req.body;
+
+  const chat = await Chat.findById(chatId);
+
+  if (!chat) {
+    return res.status(404).json({ message: 'Chat not found' });
+  }
+
+  if (chat.admin !== admin) {
+    return res.status(403).json({ message: 'Only admin can update the chat' });
+  }
+
+  if (name) {
+    chat.name = name;
+  }
+
+  if (users && users.length > 0) {
+    chat.pendingApprovals = [...chat.pendingApprovals, ...users];
+  }
+
+  await chat.save();
+
+  res.status(200).json(chat);
+}
+
+const approveGroupChatRequest = async (req, res) => {
+  const { chatId, userId } = req.body;
+
+  const chat = await Chat.findById(chatId);
+
+  if (!chat) {
+    return res.status(404).json({ message: 'Chat not found' });
+  }
+
+  if (!chat.pendingApprovals.includes(userId)) {
+    return res.status(400).json({ message: 'No pending approval for this user' });
+  }
+
+  chat.pendingApprovals = chat.pendingApprovals.filter(id => id !== userId);
+  chat.users.push(userId);
+
+  await chat.save();
+
+  res.status(200).json(chat);
+}
+
 const messageChangeStream = Message.watch();
 messageChangeStream.on('change', async (change) => {
   const messageData = change.fullDocument;
@@ -80,4 +142,4 @@ chatChangeStream.on('change', async (change) => {
   }
 });
 
-export { getMessages, saveMessages, getChats };
+export { getMessages, saveMessages, getChats, createGroupChat, updateGroupChat, approveGroupChatRequest };

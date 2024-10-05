@@ -4,7 +4,8 @@ const chatSchema = new Schema({
     users: [
         { 
             type: Schema.Types.ObjectId, 
-            ref: 'User', required: true 
+            ref: 'User', 
+            required: true 
         }
     ],
     messages: [
@@ -13,7 +14,29 @@ const chatSchema = new Schema({
             ref: 'Message' 
         }
     ],
-    createdAt: { type: Date, default: Date.now },
+    isGroupChat: {
+        type: Boolean, 
+        default: false 
+    },
+    groupName: { 
+        type: String, 
+        required: function() { return this.isGroupChat; } 
+    },
+    admin: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'User',
+        required: function() { return this.isGroupChat; }
+    },
+    pendingApprovals: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ],
+    createdAt: { 
+        type: Date, 
+        default: Date.now 
+    },
 });
 
 export default mongoose.model("Chat", chatSchema);
