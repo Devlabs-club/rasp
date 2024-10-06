@@ -84,7 +84,7 @@ const Search = () => {
                 return;
             }
         });
-    });    
+    });
 
     if (isToxic) return;
 
