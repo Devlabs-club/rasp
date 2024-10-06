@@ -9,6 +9,8 @@ import SelectInput from "../inputs/SelectInput";
 import SubmitButton from "../inputs/SubmitButton";
 import { UserContext, SocketContext } from "../../pages/Dashboard";
 
+import * as toxicity from '@tensorflow-models/toxicity';
+
 interface UserCardInfo {
   id: string;
   name: string;
@@ -72,7 +74,22 @@ const Search = () => {
 
   const setUserStatus = async (e: FormEvent) => {
     e.preventDefault();
+
+    let isToxic = false;
+    toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']).then(model => {
+        model.classify([status.content]).then(predictions => {
+            if (predictions[0].results.some(result => result.match)) {
+                isToxic = true;
+                alert("Your profile contains inappropriate content. Please remove it before saving.");
+                return;
+            }
+        });
+    });    
+
+    if (isToxic) return;
+
     const data = await axios.patch("http://localhost:5000/user/status", { status: status.content, duration: status.duration, userId: user?._id });
+
     if (data.status === 201) {
       console.log("status updated successfully");
     }
