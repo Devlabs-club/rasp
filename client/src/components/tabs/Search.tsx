@@ -3,7 +3,6 @@ import { useState, FormEvent, ChangeEvent, useContext, useEffect } from "react";
 import UserCard from "../user/UserCard";
 import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
-import Chat from "../chat/Chat";
 import Input from "../inputs/Input";
 import SelectInput from "../inputs/SelectInput";
 import SubmitButton from "../inputs/SubmitButton";
@@ -12,7 +11,6 @@ import { UserContext, SocketContext } from "../../pages/Dashboard";
 import * as toxicity from '@tensorflow-models/toxicity';
 
 interface UserCardInfo {
-  id: string;
   name: string;
   email: string;
   photo: any;
@@ -24,21 +22,21 @@ interface Status {
   duration: string;
 }
 
-const Search = () => {
+interface SearchProps {
+  setCurrentTab: (tab: string) => void; // Added prop for tab management
+  setChatReceiver: (receiver: any) => void; // New prop for setting chat receiver
+}
+
+const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
   const user = useContext(UserContext);
   const socket = useContext(SocketContext);
-
   const [response, setResponse] = useState<UserCardInfo[]>([]);
   const [query, setQuery] = useState<string>("");
-
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-
-  const [receiver, setReceiver] = useState<any>(null);
-
+  const [selectedUser, setSelectedUser] = useState<UserCardInfo | null>(null);
   const [status, setStatus] = useState<Status>({
     content: "",
     duration: ""
-  })
+  });
 
   useEffect(() => {
     const getStatus = async () => {
@@ -56,21 +54,23 @@ const Search = () => {
 
   const searchUser = async (e: FormEvent) => {
     e.preventDefault();
-
-    const data = (await axios.post("http://localhost:5000/user/search", { query, user })).data;
-    setSelectedUser(null);
-    setResponse(data);
+    try {
+      const data = (await axios.post("http://localhost:5000/user/search", { query, user })).data;
+      setResponse(data);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
   };
 
-  const openChat = (sender: any, receiver: any) => {
-    setReceiver(receiver);
-    setSelectedUser(null);
+  const openChat = (receiver: UserCardInfo) => {
+    setChatReceiver(receiver); // Set the chat receiver here
+    setCurrentTab("chat"); // Change the active tab to "chat"
   };
 
-  const selectUser = (user: any) => {
+  const selectUser = (user: UserCardInfo) => {
     setSelectedUser(user);
-    setReceiver(null);
-  }
+  };
 
   const setUserStatus = async (e: FormEvent) => {
     e.preventDefault();
@@ -117,12 +117,7 @@ const Search = () => {
           <Input label="Status" name="content" placeholder="What's on your mind?" value={status.content} setValue={(value) => {
             setStatus(prevStatus => ({ ...prevStatus, content: value }));
           }} />
-          { user?.about?.status?.content ? 
-          <div>
-            <p>Status expires at: {new Date(user?.about.status?.expirationDate).toLocaleString()}</p>
-          </div>
-          : 
-          <></> }
+
           <SelectInput label="Status Duration" name="duration" options={["24h", "48h", "1w"]} value={status.duration} setValue={(value) => {
             setStatus(prevStatus => ({ ...prevStatus, duration: value }));
           }} />
@@ -137,8 +132,7 @@ const Search = () => {
       </div>
 
       <div className="col-span-1">
-        {receiver ? <Chat receiver={receiver} /> : <></>}
-        {selectedUser ? <SelectedUserCard selectedUser={selectedUser} openChat={openChat} /> : <></>}
+        {selectedUser && <SelectedUserCard selectedUser={selectedUser} openChat={openChat} />}
       </div>
     </div>
   );

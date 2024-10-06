@@ -23,34 +23,37 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
   const [messages, setMessages] = useState<MessageType[]>([]);
   const [chats, setChats] = useState<any[]>([]);
 
-  const getMessages = async (user: any, receiver: any) => {
-    // fetch messages from the server
-    const response = await axios.get<MessageType[]>(`http://localhost:5000/chat/get/${user._id}/${receiver._id}`);
+  const getMessages = async (userId: string, receiverId: string) => {
+    // Fetch messages from the server
+    const response = await axios.get<MessageType[]>(`http://localhost:5000/chat/get/${userId}/${receiverId}`);
     setMessages(response.data);
   }
 
-  const getChats = async (user: any) => {
-    const response = await axios.get(`http://localhost:5000/chat/getall/${user._id}`);
+  const getChats = async (userId: string) => {
+    const response = await axios.get(`http://localhost:5000/chat/getall/${userId}`);
     setChats(response.data);
   }
 
   useEffect(() => {
     // This function will only run once, on the initial render
-    getMessages(user, receiver);
-    getChats(user);
+    if (receiver) {
+      getMessages(user._id, receiver.name);
+      getChats(user._id);
 
-    socket.current?.on('message', async (newMessage: any) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);    
-    });
+      socket.current?.on('message', (newMessage: any) => {
+        setMessages((prevMessages) => [...prevMessages, newMessage]);    
+      });
 
-    socket.current?.on('chat', async (chat: any) => {
-      setChats(chats => [chat, ...chats.filter((c) => c._id !== chat._id)]);
-    });
+      socket.current?.on('chat', (chat: any) => {
+        setChats(chats => [chat, ...chats.filter((c) => c._id !== chat._id)]);
+      });
+    }
   }, [user, socket, receiver]);
 
   const saveMessage = async (sender: any, receiver: any) => {
-    // save messages to the server
-    const response = (await axios.post<MessageType>(`http://localhost:5000/chat/save/${sender._id}/${receiver._id}`, { message }));
+    // Save messages to the server
+    const response = await axios.post<MessageType>(`http://localhost:5000/chat/save/${sender._id}/${receiver._id}`, { message });
+    console.log(response);
     if (response.status === 201) {
       setMessage("");
     }
@@ -59,34 +62,34 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
   return (
     <div className="bg-neutral-800 grid grid-cols-3">
       <div className="col-span-1">
-        {chats.map((chat, index) => {
-            return (
-              <div>
-                <p>{chat.receiverName}</p>
-                <p>{chat.lastMessage.content} {chat.lastMessage.timestamp}</p>
-                <hr />
-              </div>
-            );
-          })
-        }
+        {chats.map((chat, index) => (
+          <div key={index}>
+            <p>{chat.receiverName}</p>
+            <p>{chat.lastMessage.content} {chat.lastMessage.timestamp}</p>
+            <hr />
+          </div>
+        ))}
       </div>
       <div className="col-span-2">
         <h1>Send a message to {receiver.name}</h1>
 
         <div className='flex flex-col gap-2'>
-          {messages.map((message, index) => {
-            return (
-              <Message key={index} content={message.content} timestamp={message.timestamp} isSender={message.sender === user._id} />
-            );
-          })}
+          {messages.map((message, index) => (
+            <Message key={index} content={message.content} timestamp={message.timestamp} isSender={message.sender === user._id} />
+          ))}
         </div>
 
-        <input className="text-black" type="text" placeholder="Type your message here" value={message} onChange={(e) => setMessage(e.target.value)} />
+        <input 
+          className="text-black" 
+          type="text" 
+          placeholder="Type your message here" 
+          value={message} 
+          onChange={(e) => setMessage(e.target.value)} 
+        />
         <button onClick={() => saveMessage(user, receiver)}>Send Message</button>
       </div>
-      
     </div>
-  )
+  );
 }
 
 export default Chat;
