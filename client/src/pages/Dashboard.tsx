@@ -38,13 +38,13 @@ const Dashboard: React.FC = () => {
         return;
       }
       try {
-        const { data } = await axios.post("http://localhost:5001", {}, { withCredentials: true });
+        const { data } = await axios.post("http://localhost:5000", {}, { withCredentials: true });
         const { status, user } = data;
         
         if (status) {
           setUser(user);
           
-          socket.current = io("http://localhost:5001", {
+          socket.current = io("http://localhost:5000", {
             query: { userId: user._id }
           });
 

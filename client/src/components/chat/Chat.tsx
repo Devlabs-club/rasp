@@ -25,12 +25,12 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
 
   const getMessages = async (userId: string, receiverId: string) => {
     // Fetch messages from the server
-    const response = await axios.get<MessageType[]>(`http://localhost:5001/chat/get/${userId}/${receiverId}`);
+    const response = await axios.get<MessageType[]>(`http://localhost:5000/chat/get/${userId}/${receiverId}`);
     setMessages(response.data);
   }
 
   const getChats = async (userId: string) => {
-    const response = await axios.get(`http://localhost:5001/chat/getall/${userId}`);
+    const response = await axios.get(`http://localhost:5000/chat/getall/${userId}`);
     setChats(response.data);
   }
 
@@ -52,7 +52,7 @@ const Chat: React.FC<ChatProps> = ({ receiver }) => {
 
   const saveMessage = async (sender: any, receiver: any) => {
     // Save messages to the server
-    const response = await axios.post<MessageType>(`http://localhost:5001/chat/save/${sender._id}/${receiver._id}`, { message });
+    const response = await axios.post<MessageType>(`http://localhost:5000/chat/save/${sender._id}/${receiver._id}`, { message });
     console.log(response);
     if (response.status === 201) {
       setMessage("");

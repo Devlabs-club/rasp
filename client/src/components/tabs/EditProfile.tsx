@@ -47,7 +47,7 @@ const UserProfile = () => {
     const saveUser = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await axios.patch("http://localhost:5001/user/save", { user: { ...user, ...userData } });
+        const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
         console.log(response);
     };
 

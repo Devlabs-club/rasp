@@ -40,7 +40,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
   const searchUser = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const data = (await axios.post("http://localhost:5001/user/search", { query, user })).data;
+      const data = (await axios.post("http://localhost:5000/user/search", { query, user })).data;
       setResponse(data);
       setSelectedUser(null);
     } catch (error) {
@@ -60,7 +60,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
   const setUserStatus = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const data = await axios.patch("http://localhost:5001/user/status", {
+      const data = await axios.patch("http://localhost:5000/user/status", {
         status: status.content,
         duration: status.duration,
         userId: user?._id,
