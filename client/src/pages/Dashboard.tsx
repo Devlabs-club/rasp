@@ -1,41 +1,33 @@
 import axios from "axios";
+import React, { useEffect, useCallback, useState } from "react";
 import { googleLogout } from "@react-oauth/google";
-import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
-import { createContext } from 'react';
-import io from "socket.io-client";
 
 import EditProfile from "../components/tabs/EditProfile";
 import Search from "../components/tabs/Search";
 import ChatPage from "../components/tabs/ChatPage";
 import Navbar from "../components/NavBar";
 
-const UserContext = createContext<any>(null);
-const SocketContext = createContext<any>(null);
+import useUserStore from '../states/userStore';
+import useChatStore from '../states/chatStore';
+import useSocketStore from '../states/socketStore';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [cookies, , removeCookie] = useCookies(['token']);
-  const [user, setUser] = useState<any>(null);
-  const [currentTab, _setCurrentTab] = useState("search"); // State to track current tab
-  const [chatReceiver, setChatReceiver] = useState<string>("");
+  const { user, setUser } = useUserStore();
+  const { setCurrentReceiver } = useChatStore();
+  const [currentTab, setCurrentTab] = useState("search");
 
-  const socket = useRef<any>(null);
-
-  const setCurrentTab = (tab: string) => {
-    _setCurrentTab(tab);
-    if (tab !== "chat") {
-      setChatReceiver("");
-    }
-  }
+  const { connectSocket, disconnectSocket } = useSocketStore();
 
   const Logout = useCallback(() => {
     setUser(null);
     googleLogout();
     removeCookie("token");
     navigate("/signin");
-  }, [navigate, removeCookie]);
+  }, [navigate, setUser, removeCookie]);
 
   useEffect(() => {
     const verifyCookie = async () => {
@@ -49,17 +41,10 @@ const Dashboard: React.FC = () => {
         
         if (status) {
           setUser(user);
+          connectSocket(user._id);
           
-          socket.current = io("http://localhost:5000", {
-            query: { userId: user._id }
-          });
-
-          socket.current?.on("user-update", async (updatedUser: any) => {
-            setUser(updatedUser);    
-          });
-        
           return () => {
-            socket.current?.disconnect();
+            disconnectSocket();
           }
         } else {
           Logout();
@@ -70,26 +55,21 @@ const Dashboard: React.FC = () => {
       }
     };
     verifyCookie(); 
-  }, [cookies, navigate, Logout]);
+  }, [cookies, navigate, Logout, setUser, connectSocket, disconnectSocket]);
 
   return (
-    <SocketContext.Provider value={socket}>
-      <UserContext.Provider value={user}>
-        <section className="flex h-screen">
-          <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} Logout={Logout} />
-          <div className="container mx-auto flex flex-col gap-16 py-24 w-full overflow-y-auto">
-            {user ? (
-              currentTab === "editProfile" ? <EditProfile /> :
-              currentTab === "search" ? <Search setChatReceiver={setChatReceiver} setCurrentTab={setCurrentTab} /> : // Pass the setCurrentTab prop here
-              currentTab === "chat" ? <ChatPage receiver={chatReceiver} setReceiver={setChatReceiver} /> : 
-              <EditProfile />
-            ) : null}
-          </div>
-        </section>
-      </UserContext.Provider>
-    </SocketContext.Provider>
+    <section className="flex h-screen">
+      <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} Logout={Logout} />
+      <div className="container mx-auto flex flex-col gap-16 py-24 w-full overflow-y-auto">
+        {user ? (
+          currentTab === "editProfile" ? <EditProfile /> :
+          currentTab === "search" ? <Search setCurrentTab={setCurrentTab} setChatReceiver={setCurrentReceiver} /> : 
+          currentTab === "chat" ? <ChatPage /> : 
+          <EditProfile />
+        ) : null}
+      </div>
+    </section>
   );
 }
 
-export { UserContext, SocketContext };
 export default Dashboard;

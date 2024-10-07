@@ -1,79 +1,63 @@
-import React, { useState, useEffect, useContext } from "react";
-import axios from "axios";
-import { UserContext, SocketContext } from "../../pages/Dashboard";
+import React, { useEffect } from "react";
+import useSocketStore from '../../states/socketStore';
+import useUserStore from '../../states/userStore';
+import useChatStore, { ChatMessage } from '../../states/chatStore';
 import Message from "../chat/Message";
 import { formatDate } from "../../utils/formatDateTime";
 import Input from "../inputs/Input";
 import SubmitButton from "../inputs/SubmitButton";
 
-interface ChatMessage {
-    _id: string;
-    sender: string; // User ID or Name
-    receiver: string; // User ID or Name
-    content: string;
-    timestamp: Date;
-}
+const ChatPage: React.FC = () => {
+    const { user } = useUserStore();
+    const { 
+        chats, 
+        messages, 
+        currentReceiver, 
+        setMessages, 
+        setCurrentReceiver, 
+        getChats, 
+        getMessages, 
+        saveMessage 
+    } = useChatStore();
 
-interface ChatPageProps {
-    receiver: string; // Added prop for tab management
-    setReceiver: (receiver: any) => void; 
-}
+    const { socket } = useSocketStore();
 
-const ChatPage: React.FC<ChatPageProps> = ({ receiver, setReceiver }) => {
-    const user = useContext(UserContext);
-    const socket = useContext(SocketContext);
-
-    const [chats, setChats] = useState<any[]>([]);
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [message, setMessage] = useState<string>("");
-
-    const getChats = async (userId: string) => {
-        const response = await axios.get(`http://localhost:5000/chat/getall/${userId}`);      
-        setChats(response.data);
-    }
-
-    const getMessages = async (userId: string, receiverId: string) => {
-        const response = await axios.get<ChatMessage[]>(`http://localhost:5000/chat/get/${userId}/${receiverId}`);
-        setMessages(response.data);
-    }
+    const [message, setMessage] = React.useState<string>("");
 
     useEffect(() => {
         setMessages([]);
         setMessage("");
         getChats(user._id);
 
-        if (receiver) {
-            getMessages(user._id, receiver);
+        if (currentReceiver) {
+            getMessages(user._id, currentReceiver);
+            setCurrentReceiver(currentReceiver);
         }
-    }, [user, receiver]);
+    }, [user, currentReceiver, getChats, getMessages, setMessages, setCurrentReceiver]);
 
     useEffect(() => {
-        socket.current?.on('message', (newMessage: any) => {
-            if(newMessage.sender === user._id || newMessage.sender === receiver) {
-                setMessages((prevMessages) => [...prevMessages.filter(message => message._id !== newMessage._id), newMessage]);   
+        socket?.on('new message', (newMessage: ChatMessage) => {
+            if(newMessage.sender === user._id || newMessage.sender === currentReceiver) {
+            setMessages([...messages, newMessage]);
             }                  
-        });    
-        
-    }, [socket, messages, user._id, receiver]);
+        });
+    }, [messages, socket, setMessages, user._id, currentReceiver]);
 
     useEffect(() => {
-        socket.current?.on('chat', (chat: any) => {
+        socket?.on('chat', () => {
             getChats(user._id);
         });
-    }, [ user._id, socket]);
+    }, [user._id, socket, getChats]);
 
-    const handleChatSelect = async (chat: any) => {
-        const newReceiver = chat.users.filter((u: any) => u !== user._id)[0];
-        setReceiver(newReceiver || "");
+    const handleChatSelect = (chat: any) => {
+        const newReceiver = chat.users.filter((u: string) => u !== user._id)[0];
+        setCurrentReceiver(newReceiver || "");
     };
 
-    const saveMessage = async (sender: any, receiver: any) => {
-        // Save messages to the server
-        const response = await axios.post<ChatMessage>(`http://localhost:5000/chat/save/${sender._id}/${receiver}`, { message });
-        if (response.status === 201) {
+    const handleSaveMessage = async () => {
+        await saveMessage(user._id, currentReceiver, message);
         setMessage("");
-        }       
-      }
+    };
 
     return (
         <div className="flex h-full">
@@ -84,9 +68,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ receiver, setReceiver }) => {
                         <li
                             key={index}
                             onClick={() => handleChatSelect(chat)}
-                            className={`flex flex-col p-2 rounded-md cursor-pointer transition-all ${chat?.users?.includes(receiver) ? "bg-gray-600" : "bg-neutral-900"}`}
+                            className={`flex flex-col p-2 rounded-md cursor-pointer transition-all ${chat?.users?.includes(currentReceiver) ? "bg-gray-600" : "bg-neutral-900"}`}
                         >
-                            <span className="font-medium">{chat.receiverName}</span>
+                            <span className="font-medium">{chat.currentReceiverName}</span>
                             <span>
                                 {chat.lastMessage.content} - {formatDate(chat.lastMessage.timestamp)}
                             </span>
@@ -97,11 +81,11 @@ const ChatPage: React.FC<ChatPageProps> = ({ receiver, setReceiver }) => {
             {/* Main Chat Panel */}
             <div className="flex-1 p-6 bg-black">
                 <div className="h-full flex flex-col">
-                    {receiver ? (
+                    {currentReceiver ? (
                         <div className="overflow-y-scroll flex flex-col-reverse gap-4 h-full">                            
                             <div className='flex gap-4'>
                                 <Input name="message" placeholder="Hey, I think you're super cool!" value={message} setValue={setMessage} />
-                                <SubmitButton onClick={() => saveMessage(user, receiver)} />
+                                <SubmitButton onClick={handleSaveMessage} />
                             </div>
 
                             <div className="mt-auto flex flex-col gap-2">

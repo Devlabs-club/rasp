@@ -1,13 +1,11 @@
 import axios from "axios";
-import { useState, FormEvent, useContext } from "react";
-import { UserContext } from "../../pages/Dashboard";
+import { useState, FormEvent } from "react";
+import useUserStore from "../../states/userStore";
 
 import Input from "../inputs/Input";
 import ArrayInput from "../inputs/ArrayInput";
 import SelectInput from "../inputs/SelectInput";
 import TextBox from "../inputs/TextBox";
-// import ProjectInput from "../inputs/ProjectInput";
-// import ExperienceInput from "../inputs/ExperienceInput";
 import SubmitButton from "../inputs/SubmitButton";
 import Heading from "../text/Heading";
 import EditUserCard from "../user/EditUserCard";
@@ -39,7 +37,7 @@ const defaultUser: any = {
 }
 
 const UserProfile = () => {
-    const user = useContext(UserContext);
+    const { user } = useUserStore();
 
     const [userData, setUserData] = useState<any>({
         ...defaultUser,
@@ -70,7 +68,7 @@ const UserProfile = () => {
 
         const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
         if (response.status === 201) {
-            console.log("user saved successfully");
+            console.log("User saved successfully");
         }    
     };
 
