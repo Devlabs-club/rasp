@@ -7,6 +7,7 @@ import Input from "../inputs/Input";
 import SubmitButton from "../inputs/SubmitButton";
 
 interface ChatMessage {
+    _id: string;
     sender: string; // User ID or Name
     receiver: string; // User ID or Name
     content: string;
@@ -37,6 +38,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ receiver, setReceiver }) => {
     }
 
     useEffect(() => {
+        setMessages([]);
+        setMessage("");
         getChats(user._id);
 
         if (receiver) {
@@ -46,11 +49,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ receiver, setReceiver }) => {
 
     useEffect(() => {
         socket.current?.on('message', (newMessage: any) => {
-            setMessages((prevMessages) => [...prevMessages, newMessage]);
-        });
-    
+            if(newMessage.sender === user._id || newMessage.sender === receiver) {
+                setMessages((prevMessages) => [...prevMessages.filter(message => message._id !== newMessage._id), newMessage]);   
+            }                  
+        });    
         
-    }, [socket]);
+    }, [socket, messages, user._id, receiver]);
 
     useEffect(() => {
         socket.current?.on('chat', (chat: any) => {
@@ -58,10 +62,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ receiver, setReceiver }) => {
         });
     }, [ user._id, socket]);
 
-    const handleChatSelect = (chat: any) => {
+    const handleChatSelect = async (chat: any) => {
         const newReceiver = chat.users.filter((u: any) => u !== user._id)[0];
-        setReceiver(newReceiver);
-        getMessages(user._id, newReceiver);
+        setReceiver(newReceiver || "");
     };
 
     const saveMessage = async (sender: any, receiver: any) => {
