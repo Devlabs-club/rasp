@@ -118,8 +118,6 @@ const searchUser = async (req, res, next) => {
       ["human", prompt],
     ]);
 
-    console.log(response.content);
-
     retrievedUsers = JSON.parse(response.content);
   }
   catch (error) {

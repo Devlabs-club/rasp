@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
       <UserContext.Provider value={user}>
         <section className="flex h-screen">
           <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} Logout={Logout} />
-          <div className="container mx-auto flex flex-col gap-16 py-24 w-full">
+          <div className="container mx-auto flex flex-col gap-16 py-24 w-full overflow-y-auto">
             {user ? (
               currentTab === "editProfile" ? <EditProfile /> :
               currentTab === "search" ? <Search setChatReceiver={setChatReceiver} setCurrentTab={setCurrentTab} /> : // Pass the setCurrentTab prop here

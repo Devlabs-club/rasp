@@ -13,7 +13,7 @@ import Heading from "../text/Heading";
 import EditUserCard from "../user/EditUserCard";
 import ProfilePictureInput from "../inputs/ProfilePictureInput";
 
-import * as toxicity from '@tensorflow-models/toxicity';
+import isToxic from "../../utils/isToxic";
 
 const defaultUser: any = {
     name: "",
@@ -63,13 +63,10 @@ const UserProfile = () => {
             ${userData.about.socials.join(" ")}
         `
 
-        // const model = await toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']);
-        // const predictions = await model.classify([textToCheck]);
-
-        // if (predictions[0].results.some(result => result.match)) {
-        //     alert("Your profile contains inappropriate content. Please remove it before saving.");
-        //     return;
-        // }
+        if (await isToxic(textToCheck)) {
+            alert("Your profile contains inappropriate content. Please remove it before saving.");
+            return;
+        };
 
         const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
         if (response.status === 201) {
