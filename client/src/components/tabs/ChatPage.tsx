@@ -1,95 +1,115 @@
 import React, { useState, useEffect, useContext } from "react";
-import Chat from "../chat/Chat"; 
-import { UserContext } from "../../pages/Dashboard";
+import axios from "axios";
+import { UserContext, SocketContext } from "../../pages/Dashboard";
+import Message from "../chat/Message";
+import { formatDate } from "../../utils/formatDateTime";
+import Input from "../inputs/Input";
+import SubmitButton from "../inputs/SubmitButton";
 
 interface ChatMessage {
     sender: string; // User ID or Name
     receiver: string; // User ID or Name
     content: string;
     timestamp: Date;
-    date: Date; // For displaying date stamps
 }
 
 interface ChatPageProps {
-    chatReceiver: any; // Added prop for tab management
-    setChatReceiver: (receiver: any) => void; 
+    receiver: string; // Added prop for tab management
+    setReceiver: (receiver: any) => void; 
 }
 
-const ChatPage: React.FC<ChatPageProps> = ({ chatReceiver, setChatReceiver }) => {
+const ChatPage: React.FC<ChatPageProps> = ({ receiver, setReceiver }) => {
     const user = useContext(UserContext);
-    const [pastChats, setPastChats] = useState<ChatMessage[]>([]);
-    const [selectedChat, setSelectedChat] = useState<ChatMessage[]>([]);
+    const socket = useContext(SocketContext);
 
-    // Sample data for past chats
+    const [chats, setChats] = useState<any[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [message, setMessage] = useState<string>("");
+
+    const getChats = async (userId: string) => {
+        const response = await axios.get(`http://localhost:5000/chat/getall/${userId}`);      
+        setChats(response.data);
+    }
+
+    const getMessages = async (userId: string, receiverId: string) => {
+        const response = await axios.get<ChatMessage[]>(`http://localhost:5000/chat/get/${userId}/${receiverId}`);
+        setMessages(response.data);
+    }
+
     useEffect(() => {
-        // Replace with actual API call to fetch past chats
-        setPastChats([
-            { sender: "Alice", receiver: "Bob", content: "Hey!", timestamp: new Date(), date: new Date() },
-            { sender: "Bob", receiver: "Alice", content: "Hi!", timestamp: new Date(), date: new Date() },
-            // Add more sample chats here...
-        ]);
-    }, []);
+        getChats(user._id);
 
-    const handleChatSelect = (chat: ChatMessage) => {
-        setChatReceiver(chat.receiver);
-        setSelectedChat(pastChats.filter(c => c.sender === chat.sender && c.receiver === chat.receiver));
+        if (receiver) {
+            getMessages(user._id, receiver);
+        }
+    }, [user, receiver]);
+
+    useEffect(() => {
+        socket.current?.on('message', (newMessage: any) => {
+            setMessages((prevMessages) => [...prevMessages, newMessage]);
+        });
+    
+        
+    }, [socket]);
+
+    useEffect(() => {
+        socket.current?.on('chat', (chat: any) => {
+            getChats(user._id);
+        });
+    }, [ user._id, socket]);
+
+    const handleChatSelect = (chat: any) => {
+        const newReceiver = chat.users.filter((u: any) => u !== user._id)[0];
+        setReceiver(newReceiver);
+        getMessages(user._id, newReceiver);
     };
 
-    const formatTime = (date: Date) => {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    };
-
-    const formatDate = (date: Date) => {
-        return date.toLocaleDateString("en-US");
-    };
+    const saveMessage = async (sender: any, receiver: any) => {
+        // Save messages to the server
+        const response = await axios.post<ChatMessage>(`http://localhost:5000/chat/save/${sender._id}/${receiver}`, { message });
+        if (response.status === 201) {
+        setMessage("");
+        }       
+      }
 
     return (
-        <div className="flex h-screen">
-            <div className="fixed top-0 left-20 h-full w-64 text-white p-4" style={{ backgroundColor: '#262626' }}>
-                <h2 className="text-lg font-bold mb-4">Chats</h2>
+        <div className="flex h-full">
+            <div className="h-full w-64 text-white p-4" style={{ backgroundColor: '#262626' }}>
+                <h2 className="text-lg font-bold mb-4">chats</h2>
                 <ul className="space-y-2">
-                    {pastChats.map((chat, index) => (
+                    {chats.map((chat, index) => (
                         <li
                             key={index}
                             onClick={() => handleChatSelect(chat)}
-                            className={`p-2 rounded-md cursor-pointer transition-all ${chatReceiver === chat.receiver ? "bg-gray-600" : ""}`}
+                            className={`flex flex-col p-2 rounded-md cursor-pointer transition-all ${chat?.users?.includes(receiver) ? "bg-gray-600" : "bg-neutral-900"}`}
                         >
-                            {/* <UserCard user={{ name: chat.receiver }} /> */}
+                            <span className="font-medium">{chat.receiverName}</span>
+                            <span>
+                                {chat.lastMessage.content} - {formatDate(chat.lastMessage.timestamp)}
+                            </span>
                         </li>
                     ))}
                 </ul>
             </div>
-
             {/* Main Chat Panel */}
-            <div className="ml-64 flex-1 p-6 bg-black">
+            <div className="flex-1 p-6 bg-black">
                 <div className="h-full flex flex-col">
-                    {selectedChat.length > 0 ? (
-                        <>
-                            <div className="flex-1 overflow-y-auto">
-                                {selectedChat.map((message, index) => {
-                                    const isSender = message.sender === user?.name; // Assuming `user.name` gives the current user's name
+                    {receiver ? (
+                        <div className="overflow-y-scroll flex flex-col-reverse gap-4 h-full">                            
+                            <div className='flex gap-4'>
+                                <Input name="message" placeholder="Hey, I think you're super cool!" value={message} setValue={setMessage} />
+                                <SubmitButton onClick={() => saveMessage(user, receiver)} />
+                            </div>
+
+                            <div className="mt-auto flex flex-col gap-2">
+                                {messages.map((message, index) => {
+                                    const isSender = message.sender === user?._id;
                                     return (
-                                        <div key={index} className={`flex ${isSender ? "justify-end" : "justify-start"} mb-4`}>
-                                            <div
-                                                className={`max-w-xs p-2 rounded-lg text-white ${isSender ? "bg-orange-500" : "bg-gray-600"}`}
-                                            >
-                                                {message.content}
-                                                <div className="text-xs text-gray-300 mt-1">
-                                                    {formatTime(message.timestamp)}
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <Message key={index} content={message.content} timestamp={message.timestamp} isSender={isSender} />
                                     );
                                 })}
                             </div>
-
-                            <div className="mt-4 text-gray-500">
-                                {formatDate(selectedChat[0].date)} {/* Display date stamp */}
-                            </div>
-
-                            {/* Chat input component goes here */}
-                            <Chat receiver={chatReceiver} />
-                        </>
+                        </div>
                     ) : (
                         <div className="flex items-center justify-center h-full">
                             <p className="text-gray-500">Select a chat to start messaging!</p>

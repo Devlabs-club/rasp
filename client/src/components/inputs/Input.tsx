@@ -1,7 +1,7 @@
 import React, { FC, ChangeEvent } from 'react';
 
 interface InputProps {
-  label: string;
+  label?: string;
   name: string;
   placeholder: string;
   value: string;
@@ -14,8 +14,8 @@ const Input: FC<InputProps> = ({ label, name, placeholder, value, setValue }) =>
   };
 
   return (
-    <div className='flex flex-col gap-2'>
-      <label htmlFor={name} className='text-white'>{label}</label>
+    <div className='flex flex-col gap-2 w-full'>
+      {label ? <label htmlFor={name} className='text-white'>{label}</label> : <></>}
       <input
         type="text"
         autoComplete="off"

@@ -55,16 +55,16 @@ const Signin: React.FC = () => {
         <section className="bg-black flex flex-col justify-center items-center min-h-screen">
             <div className="text-white text-left text-6xl leading-tight mb-10">
                 <HeadingBig>
-                    <span className="text-orange-400">r </span>etrieval
+                    <span className="text-orange-400">r</span>etrieval
                 </HeadingBig>
                 <HeadingBig>
-                    <span className="text-orange-400">a </span>ugmented
+                    <span className="text-orange-400">a</span>ugmented
                 </HeadingBig>
                 <HeadingBig>
-                    <span className="text-orange-400">s </span>earch
+                    <span className="text-orange-400">s</span>earch
                 </HeadingBig>
                 <HeadingBig>
-                    <span className="ml-[-5rem]">for </span> <span className="text-orange-400">p </span>eople
+                    <span className="ml-[-5rem]">for </span> <span className="text-orange-400">p</span>eople
                 </HeadingBig>
             </div>
 

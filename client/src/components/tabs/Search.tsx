@@ -24,7 +24,7 @@ interface Status {
 
 interface SearchProps {
   setCurrentTab: (tab: string) => void; // Added prop for tab management
-  setChatReceiver: (receiver: any) => void; // New prop for setting chat receiver
+  setChatReceiver: (receiver: string) => void; // New prop for setting chat receiver
 }
 
 const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
@@ -63,7 +63,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
     }
   };
 
-  const openChat = (receiver: UserCardInfo) => {
+  const openChat = (receiver: string) => {
     setChatReceiver(receiver); // Set the chat receiver here
     setCurrentTab("chat"); // Change the active tab to "chat"
   };
@@ -75,18 +75,13 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
   const setUserStatus = async (e: FormEvent) => {
     e.preventDefault();
 
-    let isToxic = false;
-    toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']).then(model => {
-        model.classify([status.content]).then(predictions => {
-            if (predictions[0].results.some(result => result.match)) {
-                isToxic = true;
-                alert("Your profile contains inappropriate content. Please remove it before saving.");
-                return;
-            }
-        });
-    });
+    const model = await toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']);
+    const predictions = await model.classify([status.content]);
 
-    if (isToxic) return;
+    if (predictions[0].results.some(result => result.match)) {
+        alert("Inappropriate content. Please remove it before saving.");
+        return;
+    }
 
     const data = await axios.patch("http://localhost:5000/user/status", { status: status.content, duration: status.duration, userId: user?._id });
 

@@ -1,14 +1,11 @@
-import React, { useContext } from 'react';
 import { AiOutlineMessage } from "react-icons/ai";
-import { UserContext } from '../../pages/Dashboard';
 
 interface SelectedUserCardProps {
   selectedUser: any;
-  openChat: (sender: any, receiver: any) => void;
+  openChat: (receiver: any) => void;
 }
 
 const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openChat }) => {
-  const user = useContext(UserContext);
   return (
     <div className={`w-[500px] border border-gray-600 sticky top-10 right-0`}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
@@ -75,7 +72,7 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openC
           </div>
         </div>
 
-        <button className="px-4 py-2 w-fit bg-gradient-to-br from-orange-400 to-orange-600 text-lg text-white mx-3 my-4 flex gap-2 items-center" onClick={() => openChat(user, selectedUser)}>
+        <button className="px-4 py-2 w-fit bg-gradient-to-br from-orange-400 to-orange-600 text-lg text-white mx-3 my-4 flex gap-2 items-center" onClick={() => openChat(selectedUser._id)}>
           Chat <AiOutlineMessage size="1rem" />
         </button>
       </div>

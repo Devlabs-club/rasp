@@ -1,20 +1,26 @@
+import e from 'express';
 import Chat from '../models/chatModel.js';
 import Message from '../models/messageModel.js';
 import { User } from '../models/userModel.js';
 import connectedClients from '../utils/connectedClients.js';
 
 const getChats = async (req, res) => {
-  const chatDocuments = await Chat.find({ users: req.params.userId });
+  const chatDocuments = await Chat.find({ users: { $all: [req.params.userId] } });
   const chats = [];
   for (const chat of chatDocuments) {
     const lastMessage = await Message.findById(chat.messages[chat.messages.length - 1]);
     const receiverName = (await User.findById(chat.users.find(userId => userId != req.params.userId)))?.name;
     chats.push(
-      {...chat, 
+      {_id: chat._id,
+        users: chat.users,
+        groupName: chat.groupName,
+        isGroupChat: chat.isGroupChat,
+        pendingApprovals: chat.pendingApprovals,
         lastMessage,
         receiverName 
       });
   }
+  chats.sort((a, b) => b.lastMessage.timestamp - a.lastMessage.timestamp);
   res.json(chats);
 }
 
@@ -44,9 +50,7 @@ const saveMessages = async (req, res) => {
   }
   chat.messages = [...chat.messages, newMessage._id];
   chat.lastMessage = newMessage;
-  // sort chat in descending order of timestamp
-  chat.sort((a, b) => b.timestamp - a.timestamp);
-  chat.save();
+  await chat.save();
   
   res.status(201).json("Success");
 }
@@ -131,13 +135,19 @@ messageChangeStream.on('change', async (change) => {
 
 const chatChangeStream = Chat.watch();
 chatChangeStream.on('change', async (change) => {
-  const chatData = change.fullDocument;
+  const chatData = change.documentKey;
 
   const chat = await Chat.findById(chatData?._id);
+  const lastMessage = await Message.findById(chat.messages[chat.messages.length - 1]);
+  const changedChat =
+    {_id: chat._id,
+      users: chat.users,
+      lastMessage
+    };
 
-  for (const user of (chatData?.users || [])) {
+  for (const user of (chat?.users || [])) {
     if (connectedClients[user]) {
-      connectedClients[user].emit('chat', chat);
+      connectedClients[user].emit('chat', changedChat);
     }
   }
 });

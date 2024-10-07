@@ -18,10 +18,17 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [cookies, , removeCookie] = useCookies(['token']);
   const [user, setUser] = useState<any>(null);
-  const [currentTab, setCurrentTab] = useState("search"); // State to track current tab
-  const [chatReceiver, setChatReceiver] = useState<string | null>(null);
+  const [currentTab, _setCurrentTab] = useState("search"); // State to track current tab
+  const [chatReceiver, setChatReceiver] = useState<string>("");
 
   const socket = useRef<any>(null);
+
+  const setCurrentTab = (tab: string) => {
+    _setCurrentTab(tab);
+    if (tab !== "chat") {
+      setChatReceiver("");
+    }
+  }
 
   const Logout = useCallback(() => {
     setUser(null);
@@ -68,18 +75,15 @@ const Dashboard: React.FC = () => {
   return (
     <SocketContext.Provider value={socket}>
       <UserContext.Provider value={user}>
-        <section className="flex">
-          <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+        <section className="flex h-screen">
+          <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} Logout={Logout} />
           <div className="container mx-auto flex flex-col gap-16 py-24 w-full">
             {user ? (
               currentTab === "editProfile" ? <EditProfile /> :
               currentTab === "search" ? <Search setChatReceiver={setChatReceiver} setCurrentTab={setCurrentTab} /> : // Pass the setCurrentTab prop here
-              currentTab === "chat" ? <ChatPage chatReceiver={chatReceiver} setChatReceiver={setChatReceiver} /> : 
+              currentTab === "chat" ? <ChatPage receiver={chatReceiver} setReceiver={setChatReceiver} /> : 
               <EditProfile />
             ) : null}
-            <button onClick={Logout} className="text-white flex gap-2 justify-center items-center px-4 py-2 rounded-md font-medium transition-all duration-200 hover:-translate-y-0.5 bg-red-500 w-fit">
-              Logout
-            </button>
           </div>
         </section>
       </UserContext.Provider>

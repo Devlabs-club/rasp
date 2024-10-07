@@ -63,18 +63,14 @@ const UserProfile = () => {
             ${userData.about.socials.join(" ")}
         `
 
-        let isToxic = false;
-        toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']).then(model => {
-            model.classify([textToCheck]).then(predictions => {
-                if (predictions[0].results.some(result => result.match)) {
-                    isToxic = true;
-                    alert("Your profile contains inappropriate content. Please remove it before saving.");
-                    return;
-                }
-            });
-        });    
+        const model = await toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']);
+        const predictions = await model.classify([textToCheck]);
 
-        if (isToxic) return;
+        if (predictions[0].results.some(result => result.match)) {
+            alert("Your profile contains inappropriate content. Please remove it before saving.");
+            return;
+        }
+
         const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
         if (response.status === 201) {
             console.log("user saved successfully");
