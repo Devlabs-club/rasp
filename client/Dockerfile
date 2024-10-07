@@ -13,6 +13,12 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
+# Copy .env files
+COPY .env* ./
+
+# Set environment variables
+ENV $(cat .env | xargs)
+
 # Build the React application
 RUN npm run build
 

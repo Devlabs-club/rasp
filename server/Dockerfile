@@ -13,6 +13,12 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
+# Copy .env file
+COPY .env .
+
+# Set environment variables
+ENV $(cat .env | xargs)
+
 # Expose the port the app runs on
 EXPOSE 5000
 
