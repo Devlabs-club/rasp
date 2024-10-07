@@ -75,13 +75,13 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
   const setUserStatus = async (e: FormEvent) => {
     e.preventDefault();
 
-    const model = await toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']);
-    const predictions = await model.classify([status.content]);
+    // const model = await toxicity.load(0.85, ['toxicity', 'severe_toxicity', 'identity_attack', 'insult', 'threat', 'sexual_explicit', 'obscene']);
+    // const predictions = await model.classify([status.content]);
 
-    if (predictions[0].results.some(result => result.match)) {
-        alert("Inappropriate content. Please remove it before saving.");
-        return;
-    }
+    // if (predictions[0].results.some(result => result.match)) {
+    //     alert("Inappropriate content. Please remove it before saving.");
+    //     return;
+    // }
 
     const data = await axios.patch("http://localhost:5000/user/status", { status: status.content, duration: status.duration, userId: user?._id });
 
