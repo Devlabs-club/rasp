@@ -1,7 +1,7 @@
 import Chat from '../models/chatModel.js';
 import Message from '../models/messageModel.js';
 import { User } from '../models/userModel.js';
-import connectedClients from '../utils/connectedClients.js';
+import { emitToConnectedClient, publish } from '../utils/connectedClients.js';
 
 const getChats = async (req, res) => {
   const chatDocuments = await Chat.find({ users: { $all: [req.params.userId] } });
@@ -124,12 +124,8 @@ messageChangeStream.on('change', async (change) => {
 
   const message = await Message.findById(messageData?._id);
 
-  if (connectedClients[messageData?.sender]) {
-    connectedClients[messageData?.sender].emit('message', message);
-  }
-  if (connectedClients[messageData?.receiver]) {
-    connectedClients[messageData?.receiver].emit('message', message);
-  }
+  emitToConnectedClient(messageData?.sender, 'message', message);
+  emitToConnectedClient(messageData?.receiver, 'message', message);
 });
 
 const chatChangeStream = Chat.watch();
@@ -138,17 +134,16 @@ chatChangeStream.on('change', async (change) => {
 
   const chat = await Chat.findById(chatData?._id);
   const lastMessage = await Message.findById(chat.messages[chat.messages.length - 1]);
-  const changedChat =
-    {_id: chat._id,
-      users: chat.users,
-      lastMessage
-    };
+  const changedChat = {
+    _id: chat._id,
+    users: chat.users,
+    lastMessage
+  };
 
   for (const user of (chat?.users || [])) {
-    if (connectedClients[user]) {
-      connectedClients[user].emit('chat', changedChat);
-    }
+    emitToConnectedClient(user, 'chat', changedChat);
   }
 });
+
 
 export { getMessages, saveMessages, getChats, createGroupChat, updateGroupChat, approveGroupChatRequest };

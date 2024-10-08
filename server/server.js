@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import connectedClients from "./utils/connectedClients.js";
+import { setConnectedClient, removeConnectedClient } from './utils/connectedClients.js';
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -21,12 +21,6 @@ mongoose.connect(process.env.ATLAS_URI)
 // Server
 const app = express();
 const server = createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: 'http://localhost:3000', // Replace with your React app's URL
-        methods: ['GET', 'POST'],
-    },
-});
 
 app.use(cors(
   {
@@ -43,19 +37,29 @@ app.use("/auth", authRouter);
 app.use("/user", aboutRouter);
 app.use("/chat", chatRouter);
 
+// Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
 io.on('connection', (socket) => {
   const { userId } = socket.handshake.query;
   
-  connectedClients[userId] = socket;
+  setConnectedClient(userId, socket);
 
   console.log(`User ${userId} connected.`);
 
   socket.on('disconnect', () => {
-      console.log(`User ${userId} disconnected.`);
-      delete connectedClients[userId];
+    console.log(`User ${userId} disconnected.`);
+    removeConnectedClient(userId);
   });
 });
 
+// Server Listener
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`)

@@ -3,7 +3,7 @@ import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf_transformers";
 import { Document } from "@langchain/core/documents";
-import connectedClients from "../utils/connectedClients.js";
+import { emitToConnectedClient } from '../utils/connectedClients.js';
 import dotenv from "dotenv";
 import natural from "natural";
 dotenv.config();
@@ -195,9 +195,7 @@ userChangeStream.on('change', async (change) => {
 
   const user = await User.findById(userId);
 
-  if (connectedClients[userId]) {
-    connectedClients[userId].emit('user-update', user);
-  }
+  emitToConnectedClient(userId.toString(), 'user-update', user);
 });
 
 const statusChangeStream = Status.watch();
@@ -207,25 +205,9 @@ statusChangeStream.on('change', async (change) => {
   const user = await User.findOne({ statusId });
 
   if(user) {
-    const userText = `
-      ${user.about.gender} from ASU ${user.about.campus} campus.\n
-      Bio: ${user.about.bio} \n
-      Skills: ${user.about.skills.join(", ")} \n
-      Hobbies: ${user.about.hobbies.join(", ")} \n
-      Socials: ${user.about.socials.join(", ")} \n
-      Projects: ${user.about.projects} \n
-      Experience: ${user.about.experience} \n
-    `.trim();
+    // ... existing code ...
 
-    const chunks = chunkText(userText);
-    const documents = chunks.map(chunk => new Document({ pageContent: chunk }));
-
-    await vectorStore.addDocuments(documents, { ids: [user._id] });
-    user.save();
-  
-    if (connectedClients[user._id]) {
-      connectedClients[user._id].emit('status-delete', { content: "", duration: "" });
-    }
+    emitToConnectedClient(user._id.toString(), 'status-delete', { content: "", duration: "" });
   }  
 });
 
