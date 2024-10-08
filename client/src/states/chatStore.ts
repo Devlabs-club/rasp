@@ -13,6 +13,8 @@ interface ChatState {
   chats: any[];
   messages: ChatMessage[];
   currentReceiver: string;
+  message: string;
+  setMessage: (message: string) => void;
   setChats: (chats: any[]) => void;
   setMessages: (messages: ChatMessage[]) => void;
   setCurrentReceiver: (receiver: string) => void;
@@ -25,6 +27,8 @@ const useChatStore = create<ChatState>((set) => ({
   chats: [],
   messages: [],
   currentReceiver: '',
+  message: '',
+  setMessage: (message) => set({ message }),
   setChats: (chats) => set({ chats }),
   setMessages: (messages) => set({ messages }),
   setCurrentReceiver: (receiver) => set({ currentReceiver: receiver }),
@@ -48,7 +52,7 @@ const useChatStore = create<ChatState>((set) => ({
     try {
       const response = await axios.post<ChatMessage>(`http://localhost:5000/chat/save/${sender}/${receiver}`, { message });
       if (response.status === 201) {
-        set((state) => ({ messages: [...state.messages, response.data] }));
+        set({ message: '' }); 
       }
     } catch (error) {
       console.error('Error saving message:', error);

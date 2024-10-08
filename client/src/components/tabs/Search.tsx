@@ -42,6 +42,11 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
   const setUserStatus = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!status) {
+      console.error("Status is null");
+      return;
+    }
+
     if (await isToxic(status.content)) {
       alert("Your status contains inappropriate content. Please remove it before saving.");
       return;
@@ -74,7 +79,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
             label="Status"
             name="content"
             placeholder="What's on your mind?"
-            value={status.content}
+            value={status?.content}
             setValue={(value: string) => {
               setStatus({ ...status, content: value });
             }}
@@ -84,7 +89,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
             label="Status Duration" 
             name="duration" 
             options={["24h", "48h", "1w"]} 
-            value={status.duration} 
+            value={status?.duration} 
             setValue={(value: string) => {
               setStatus({ ...status, duration: value });
             }} 

@@ -13,6 +13,8 @@ const ChatPage: React.FC = () => {
         chats, 
         messages, 
         currentReceiver, 
+        message,
+        setMessage,
         setMessages, 
         setCurrentReceiver, 
         getChats, 
@@ -21,8 +23,6 @@ const ChatPage: React.FC = () => {
     } = useChatStore();
 
     const { socket } = useSocketStore();
-
-    const [message, setMessage] = React.useState<string>("");
 
     useEffect(() => {
         setMessages([]);
@@ -33,13 +33,13 @@ const ChatPage: React.FC = () => {
             getMessages(user._id, currentReceiver);
             setCurrentReceiver(currentReceiver);
         }
-    }, [user, currentReceiver, getChats, getMessages, setMessages, setCurrentReceiver]);
+    }, [user, currentReceiver, getChats, getMessages, setMessages, setCurrentReceiver, setMessage]);
 
     useEffect(() => {
-        socket?.on('new message', (newMessage: ChatMessage) => {
+        socket?.on('message', (newMessage: ChatMessage) => {
             if(newMessage.sender === user._id || newMessage.sender === currentReceiver) {
-            setMessages([...messages, newMessage]);
-            }                  
+                setMessages([...messages, newMessage]);
+            }        
         });
     }, [messages, socket, setMessages, user._id, currentReceiver]);
 
