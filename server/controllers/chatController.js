@@ -30,13 +30,22 @@ const getChats = async (req, res) => {
 }
 
 const getMessages = async (req, res) => {
-  const chat = await Chat.findById(req.params.chatId);
+  const chatId = req.params.chatId;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 50;
+
+  const chat = await Chat.findById(chatId);
   if (!chat) {
     return res.status(404).json({ message: 'Chat not found' });
   }
 
-  const messages = await Message.find({ _id: { $in: chat.messages } });
-  res.json(messages);
+  const skip = (page - 1) * limit;
+  const messages = await Message.find({ _id: { $in: chat.messages } })
+    .sort({ timestamp: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  res.json(messages.reverse());
 }
 
 const saveMessage = async (req, res) => {

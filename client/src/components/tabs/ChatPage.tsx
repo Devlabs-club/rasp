@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useCallback, useState} from "react";
 import useSocketStore from '../../states/socketStore';
 import useUserStore from '../../states/userStore';
 import useChatStore, { ChatMessage, Chat } from '../../states/chatStore';
@@ -14,6 +14,7 @@ const ChatPage: React.FC = () => {
         messages, 
         currentChatId, 
         message,
+        messageCache,
         setMessage,
         setMessages, 
         setCurrentChatId, 
@@ -24,15 +25,32 @@ const ChatPage: React.FC = () => {
 
     const { socket } = useSocketStore();
 
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const [page, setPage] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
     useEffect(() => {
         setMessages([]);
         setMessage("");
         getChats(user._id);
 
         if (currentChatId) {
-            getMessages(currentChatId);
+            setPage(1);
+            if (messageCache.get(currentChatId)) {
+                setMessages(messageCache.get(currentChatId) || []);
+            } else {
+                getMessages(currentChatId, 1, 50);
+            }
         }
-    }, [user, currentChatId, getChats, getMessages, setMessages, setMessage]);
+    }, [user, currentChatId, getChats, getMessages, setMessages, setMessage, messageCache]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     useEffect(() => {
         socket?.on('message', (newMessage: ChatMessage) => {
@@ -58,6 +76,17 @@ const ChatPage: React.FC = () => {
         setMessage("");
     };
 
+    const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollTop } = e.currentTarget;
+        if (scrollTop === 0 && !isLoading) {
+            setIsLoading(true);
+            getMessages(currentChatId, page + 1, 50).then(() => {
+                setPage(prevPage => prevPage + 1);
+                setIsLoading(false);
+            });
+        }
+    }, [currentChatId, getMessages, isLoading, page]);
+
     return (
         <div className="flex h-full">
             <div className="h-full w-64 text-white p-4" style={{ backgroundColor: '#262626' }}>
@@ -81,7 +110,8 @@ const ChatPage: React.FC = () => {
             <div className="flex-1 p-6 bg-black">
                 <div className="h-full flex flex-col">
                     {currentChatId ? (
-                        <div className="overflow-y-scroll flex flex-col-reverse gap-4 h-full">                            
+                        <div className="overflow-y-scroll flex flex-col-reverse gap-4 h-full" onScroll={handleScroll}>
+                            <div ref={messagesEndRef} />
                             <div className='flex gap-4'>
                                 <Input name="message" placeholder="Hey, I think you're super cool!" value={message} setValue={setMessage} />
                                 <SubmitButton onClick={handleSaveMessage} />
@@ -95,6 +125,7 @@ const ChatPage: React.FC = () => {
                                     );
                                 })}
                             </div>
+                            {isLoading && <div>Loading more messages...</div>}
                         </div>
                     ) : (
                         <div className="flex items-center justify-center h-full">

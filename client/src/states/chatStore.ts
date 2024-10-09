@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
+import { LRUCache } from 'lru-cache';
 
 interface ChatMessage {
   _id: string;
@@ -36,12 +37,14 @@ interface ChatState {
   setMessages: (messages: ChatMessage[]) => void;
   setCurrentChatId: (chatId: string) => void;
   getChats: (userId: string) => Promise<void>;
-  getMessages: (chatId: string) => Promise<void>;
+  getMessages: (chatId: string, page: number, limit: number) => Promise<void>;
   saveMessage: (chatId: string, senderId: string, message: string) => Promise<void>;
   createChat: (users: string[], name?: string, isGroupChat?: boolean) => Promise<string>;
+  messageCache: LRUCache<string, ChatMessage[]>;
+  addMessageToCache: (chatId: string, message: ChatMessage) => void;
 }
 
-const useChatStore = create<ChatState>((set) => ({
+const useChatStore = create<ChatState>((set, get) => ({
   chats: [],
   messages: [],
   currentChatId: '',
@@ -58,10 +61,23 @@ const useChatStore = create<ChatState>((set) => ({
       console.error('Error fetching chats:', error);
     }
   },
-  getMessages: async (chatId) => {
+  getMessages: async (chatId, page = 1, limit = 50) => {
     try {
-      const response = await axios.get<ChatMessage[]>(`http://localhost:5000/chat/get/${chatId}`);
-      set({ messages: response.data });
+      const cachedMessages = get().messageCache.get(chatId);
+      if (cachedMessages && page === 1) {
+        set({ messages: cachedMessages });
+        return;
+      }
+
+      const response = await axios.get<ChatMessage[]>(
+        `http://localhost:5000/chat/get/${chatId}?page=${page}&limit=${limit}`
+      );
+      set(state => {
+        const newMessages = [...(state.messageCache.get(chatId) || []), ...response.data];
+        state.messageCache.set(chatId, newMessages);
+        state.messages = page === 1 ? response.data : [...state.messages, ...response.data];
+        return state;
+      });
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -86,6 +102,17 @@ const useChatStore = create<ChatState>((set) => ({
       console.error('Error creating chat:', error);
     }
     return '';
+  },
+  messageCache: new LRUCache<string, ChatMessage[]>({
+    max: 100,
+    ttl: 1000 * 60 * 60, // Cache for 1 hour
+  }),
+  addMessageToCache: (chatId, message) => {
+    set(state => {
+      const chatMessages = state.messageCache.get(chatId) || [];
+      state.messageCache.set(chatId, [...chatMessages, message]);
+      return state;
+    });
   },
 }));
 
