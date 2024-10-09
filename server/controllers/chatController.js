@@ -7,63 +7,78 @@ const getChats = async (req, res) => {
   const chatDocuments = await Chat.find({ users: { $all: [req.params.userId] } });
   const chats = [];
   for (const chat of chatDocuments) {
-    const lastMessage = await Message.findById(chat.messages[chat.messages.length - 1]);
-    const receiverName = (await User.findById(chat.users.find(userId => userId != req.params.userId)))?.name;
-    chats.push(
-      {_id: chat._id,
-        users: chat.users,
-        groupName: chat.groupName,
-        isGroupChat: chat.isGroupChat,
-        pendingApprovals: chat.pendingApprovals,
-        lastMessage,
-        receiverName 
-      });
+    const otherUser = await User.findById(chat.users.find(userId => userId != req.params.userId));
+    chats.push({
+      _id: chat._id,
+      users: chat.users,
+      groupName: chat.groupName,
+      isGroupChat: chat.isGroupChat,
+      pendingApprovals: chat.pendingApprovals,
+      lastMessage: chat.lastMessage,
+      otherUserName: otherUser?.name
+    });
   }
-  chats.sort((a, b) => b.lastMessage.timestamp - a.lastMessage.timestamp);
+  
+  // Sort chats, handling null lastMessage
+  chats.sort((a, b) => {
+    if (!a.lastMessage) return 1;  // Move chats without lastMessage to the end
+    if (!b.lastMessage) return -1; // Move chats without lastMessage to the end
+    return b.lastMessage.timestamp - a.lastMessage.timestamp;
+  });
+  
   res.json(chats);
 }
 
 const getMessages = async (req, res) => {
-  const messageIds = (await Chat.findOne({ users: { $all: [req.params.sender, req.params.receiver] } }))?.messages || [];
-
-  const messages = [];
-  for (const messageId of messageIds) {
-    const message = await Message.findById(messageId);
-    messages.push(message);
+  const chat = await Chat.findById(req.params.chatId);
+  if (!chat) {
+    return res.status(404).json({ message: 'Chat not found' });
   }
-  
+
+  const messages = await Message.find({ _id: { $in: chat.messages } });
   res.json(messages);
 }
 
-const saveMessages = async (req, res) => {
+const saveMessage = async (req, res) => {
+  const chat = await Chat.findById(req.params.chatId);
+  if (!chat) {
+    return res.status(404).json({ message: 'Chat not found' });
+  }
+
+  const sender = await User.findById(req.body.senderId);
+  if (!sender) {
+    return res.status(404).json({ message: 'Sender not found' });
+  }
+
   const newMessage = await Message.create({
-    sender: req.params.sender,
-    receiver: req.params.receiver,
+    sender: req.body.senderId,
+    chat: req.params.chatId, // This is now just the chat ID
     content: req.body.message,
     timestamp: Date.now(),
   });
 
-  let chat = await Chat.findOne({ users: { $all: [req.params.sender, req.params.receiver] } });
-  if (!chat) {
-    chat = await Chat.create({users: [req.params.sender, req.params.receiver], messages: []});
-  }
-  chat.messages = [...chat.messages, newMessage._id];
-  chat.lastMessage = newMessage;
+  chat.messages.push(newMessage._id);
+  chat.lastMessage = {
+    messageId: newMessage._id,
+    content: newMessage.content,
+    timestamp: newMessage.timestamp,
+    senderName: sender.name
+  };
   await chat.save();
   
-  res.status(201).json("Success");
+  res.status(201).json(newMessage);
 }
 
-const createGroupChat = async (req, res) => {
-  const { admin, users, name } = req.body;
+const createChat = async (req, res) => {
+  const { users, name, isGroupChat } = req.body;
 
   const chat = await Chat.create({
-    users: [admin, ...users],
+    users,
     groupName: name,
-    admin,
+    admin: users[0],
     messages: [],
-    isGroupChat: true,
-    pendingApprovals: users
+    isGroupChat,
+    pendingApprovals: isGroupChat ? users.slice(1) : []
   });
 
   res.status(201).json(chat);
@@ -78,7 +93,7 @@ const updateGroupChat = async (req, res) => {
     return res.status(404).json({ message: 'Chat not found' });
   }
 
-  if (chat.admin !== admin) {
+  if (chat.admin.toString() !== admin) {
     return res.status(403).json({ message: 'Only admin can update the chat' });
   }
 
@@ -108,7 +123,7 @@ const approveGroupChatRequest = async (req, res) => {
     return res.status(400).json({ message: 'No pending approval for this user' });
   }
 
-  chat.pendingApprovals = chat.pendingApprovals.filter(id => id !== userId);
+  chat.pendingApprovals = chat.pendingApprovals.filter(id => id.toString() !== userId);
   chat.users.push(userId);
 
   await chat.save();
@@ -118,21 +133,22 @@ const approveGroupChatRequest = async (req, res) => {
 
 const messageChangeStream = Message.watch();
 messageChangeStream.on('change', async (change) => {
-  const messageData = change.fullDocument;
-
   if(change.operationType !== 'insert') return;
 
-  const message = await Message.findById(messageData?._id);
+  const message = await Message.findById(change.fullDocument._id);
 
-  emitToConnectedClient(messageData?.sender, 'message', message);
-  emitToConnectedClient(messageData?.receiver, 'message', message);
+  const chat = await Chat.findById(message.chat);
+  chat.lastMessage = message;
+  await chat.save();
+  
+  chat.users.forEach(userId => {
+    emitToConnectedClient(userId.toString(), 'message', message);
+  });
 });
 
 const chatChangeStream = Chat.watch();
 chatChangeStream.on('change', async (change) => {
-  const chatData = change.documentKey;
-
-  const chat = await Chat.findById(chatData?._id);
+  const chat = await Chat.findById(change.documentKey._id);
   const lastMessage = await Message.findById(chat.messages[chat.messages.length - 1]);
   const changedChat = {
     _id: chat._id,
@@ -140,10 +156,9 @@ chatChangeStream.on('change', async (change) => {
     lastMessage
   };
 
-  for (const user of (chat?.users || [])) {
-    emitToConnectedClient(user, 'chat', changedChat);
-  }
+  chat.users.forEach(userId => {
+    emitToConnectedClient(userId.toString(), 'chat', changedChat);
+  });
 });
 
-
-export { getMessages, saveMessages, getChats, createGroupChat, updateGroupChat, approveGroupChatRequest };
+export { getMessages, saveMessage, getChats, createChat, updateGroupChat, approveGroupChatRequest };

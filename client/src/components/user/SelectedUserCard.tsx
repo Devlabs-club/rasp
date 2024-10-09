@@ -2,7 +2,7 @@ import { AiOutlineMessage } from "react-icons/ai";
 
 interface SelectedUserCardProps {
   selectedUser: any;
-  openChat: (receiver: any) => void;
+  openChat: (receiverId: string) => void;
 }
 
 const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openChat }) => {

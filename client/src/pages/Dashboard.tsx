@@ -17,7 +17,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [cookies, , removeCookie] = useCookies(['token']);
   const { user, setUser } = useUserStore();
-  const { setCurrentReceiver } = useChatStore();
+  const { setCurrentChatId } = useChatStore();
   const [currentTab, setCurrentTab] = useState("search");
 
   const { connectSocket, disconnectSocket } = useSocketStore();
@@ -63,7 +63,7 @@ const Dashboard: React.FC = () => {
       <div className="container mx-auto flex flex-col gap-16 py-24 w-full overflow-y-auto">
         {user ? (
           currentTab === "editProfile" ? <EditProfile /> :
-          currentTab === "search" ? <Search setCurrentTab={setCurrentTab} setChatReceiver={setCurrentReceiver} /> : 
+          currentTab === "search" ? <Search setCurrentTab={setCurrentTab} setCurrentChatId={setCurrentChatId} /> :
           currentTab === "chat" ? <ChatPage /> : 
           <EditProfile />
         ) : null}

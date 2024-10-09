@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import useSocketStore from '../../states/socketStore';
 import useUserStore from '../../states/userStore';
-import useChatStore, { ChatMessage } from '../../states/chatStore';
+import useChatStore, { ChatMessage, Chat } from '../../states/chatStore';
 import Message from "../chat/Message";
 import { formatDate } from "../../utils/formatDateTime";
 import Input from "../inputs/Input";
@@ -12,11 +12,11 @@ const ChatPage: React.FC = () => {
     const { 
         chats, 
         messages, 
-        currentReceiver, 
+        currentChatId, 
         message,
         setMessage,
         setMessages, 
-        setCurrentReceiver, 
+        setCurrentChatId, 
         getChats, 
         getMessages, 
         saveMessage 
@@ -29,19 +29,19 @@ const ChatPage: React.FC = () => {
         setMessage("");
         getChats(user._id);
 
-        if (currentReceiver) {
-            getMessages(user._id, currentReceiver);
-            setCurrentReceiver(currentReceiver);
+        if (currentChatId) {
+            getMessages(currentChatId);
         }
-    }, [user, currentReceiver, getChats, getMessages, setMessages, setCurrentReceiver, setMessage]);
+    }, [user, currentChatId, getChats, getMessages, setMessages, setMessage]);
 
     useEffect(() => {
         socket?.on('message', (newMessage: ChatMessage) => {
-            if(newMessage.sender === user._id || newMessage.sender === currentReceiver) {
+            console.log(newMessage);
+            if(newMessage.chat === currentChatId) {
                 setMessages([...messages, newMessage]);
             }        
         });
-    }, [messages, socket, setMessages, user._id, currentReceiver]);
+    }, [messages, socket, setMessages, currentChatId]);
 
     useEffect(() => {
         socket?.on('chat', () => {
@@ -49,13 +49,12 @@ const ChatPage: React.FC = () => {
         });
     }, [user._id, socket, getChats]);
 
-    const handleChatSelect = (chat: any) => {
-        const newReceiver = chat.users.filter((u: string) => u !== user._id)[0];
-        setCurrentReceiver(newReceiver || "");
+    const handleChatSelect = (chat: Chat) => {
+        setCurrentChatId(chat._id);
     };
 
     const handleSaveMessage = async () => {
-        await saveMessage(user._id, currentReceiver, message);
+        await saveMessage(currentChatId, user._id, message);
         setMessage("");
     };
 
@@ -68,11 +67,11 @@ const ChatPage: React.FC = () => {
                         <li
                             key={index}
                             onClick={() => handleChatSelect(chat)}
-                            className={`flex flex-col p-2 rounded-md cursor-pointer transition-all ${chat?.users?.includes(currentReceiver) ? "bg-gray-600" : "bg-neutral-900"}`}
+                            className={`flex flex-col p-2 rounded-md cursor-pointer transition-all ${chat._id === currentChatId ? "bg-gray-600" : "bg-neutral-900"}`}
                         >
-                            <span className="font-medium">{chat.currentReceiverName}</span>
+                            <span className="font-medium">{chat.isGroupChat ? chat.groupName : chat.otherUserName}</span>
                             <span>
-                                {chat.lastMessage.content} - {formatDate(chat.lastMessage.timestamp)}
+                                {chat.lastMessage?.content} - {formatDate(chat.lastMessage?.timestamp)}
                             </span>
                         </li>
                     ))}
@@ -81,7 +80,7 @@ const ChatPage: React.FC = () => {
             {/* Main Chat Panel */}
             <div className="flex-1 p-6 bg-black">
                 <div className="h-full flex flex-col">
-                    {currentReceiver ? (
+                    {currentChatId ? (
                         <div className="overflow-y-scroll flex flex-col-reverse gap-4 h-full">                            
                             <div className='flex gap-4'>
                                 <Input name="message" placeholder="Hey, I think you're super cool!" value={message} setValue={setMessage} />

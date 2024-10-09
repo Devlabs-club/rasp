@@ -7,14 +7,15 @@ import SelectInput from "../inputs/SelectInput";
 import SubmitButton from "../inputs/SubmitButton";
 import useUserStore from "../../states/userStore";
 import useSearchStore from "../../states/searchStore";
+import useChatStore from "../../states/chatStore";
 import isToxic from "../../utils/isToxic";
 
 interface SearchProps {
   setCurrentTab: (tab: string) => void;
-  setChatReceiver: (receiver: string) => void;
+  setCurrentChatId: (chatId: string) => void;
 }
 
-const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
+const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
   const { user, status, setStatus, fetchUserStatus, updateUserStatus } = useUserStore();
   const { 
     query, 
@@ -24,6 +25,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
     setSelectedUser, 
     searchUser 
   } = useSearchStore();
+  const { createChat } = useChatStore();
 
   useEffect(() => {
     fetchUserStatus(user?._id);
@@ -34,8 +36,9 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
     await searchUser(query, user);
   };
 
-  const openChat = (receiver: string) => {
-    setChatReceiver(receiver);
+  const openChat = async (receiverId: string) => {
+    const chatId = await createChat([user._id, receiverId]);
+    setCurrentChatId(chatId);
     setCurrentTab("chat");
   };
 
