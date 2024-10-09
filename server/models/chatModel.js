@@ -37,7 +37,8 @@ const chatSchema = new Schema({
         messageId: { type: Schema.Types.ObjectId, ref: 'Message' },
         content: String,
         timestamp: Date,
-        senderName: String
+        senderName: String,
+        senderId: { type: Schema.Types.ObjectId, ref: 'User' }
     },
     createdAt: { 
         type: Date, 

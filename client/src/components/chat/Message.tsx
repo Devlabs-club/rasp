@@ -5,24 +5,19 @@ interface MessageProps {
     content: string;
     timestamp: Date;
     isSender: boolean;
+    senderName: string;
 }
 
-const Message: React.FC<MessageProps> = ({ content, timestamp, isSender }) => {
-  const alignmentClass = isSender ? "justify-end" : "justify-start"
-  const bgColorClass = isSender ? "bg-orange-500" : "bg-gray-600"
-
-  return (
-    <div className={`flex ${alignmentClass}`}>
-        <div
-            className={`flex flex-col gap-1 max-w-xs p-2 rounded-lg text-white ${bgColorClass}`}
-        >
-            <p>{content}</p>
-            <time className="text-xs text-gray-200 place-self-end">
-                {formatTime(timestamp)}
-            </time>
+const Message: React.FC<MessageProps> = ({ content, timestamp, isSender, senderName }) => {
+    return (
+        <div className={`flex flex-col ${isSender ? 'items-end' : 'items-start'}`}>
+            <div className={`max-w-[70%] rounded-lg p-3 ${isSender ? 'bg-orange-500 text-white' : 'bg-gray-200 text-black'}`}>
+                <p className="text-sm font-semibold mb-1">{senderName}</p>
+                <p>{content}</p>
+                <p className="text-xs mt-1 opacity-70">{formatTime(timestamp)}</p>
+            </div>
         </div>
-    </div>
-  )
-}
+    );
+};
 
 export default Message

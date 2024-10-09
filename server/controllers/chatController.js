@@ -61,7 +61,7 @@ const saveMessage = async (req, res) => {
 
   const newMessage = await Message.create({
     sender: req.body.senderId,
-    chat: req.params.chatId, // This is now just the chat ID
+    chat: req.params.chatId,
     content: req.body.message,
     timestamp: Date.now(),
   });
@@ -71,7 +71,8 @@ const saveMessage = async (req, res) => {
     messageId: newMessage._id,
     content: newMessage.content,
     timestamp: newMessage.timestamp,
-    senderName: sender.name
+    senderName: sender.name,
+    senderId: sender._id
   };
   await chat.save();
   
@@ -145,28 +146,32 @@ messageChangeStream.on('change', async (change) => {
   if(change.operationType !== 'insert') return;
 
   const message = await Message.findById(change.fullDocument._id);
+  const chat = await Chat.findById(message.chat).populate('users', 'name');
 
-  const chat = await Chat.findById(message.chat);
-  chat.lastMessage = message;
-  await chat.save();
-  
-  chat.users.forEach(userId => {
-    emitToConnectedClient(userId.toString(), 'message', message);
-  });
-});
-
-const chatChangeStream = Chat.watch();
-chatChangeStream.on('change', async (change) => {
-  const chat = await Chat.findById(change.documentKey._id);
-  const lastMessage = await Message.findById(chat.messages[chat.messages.length - 1]);
-  const changedChat = {
-    _id: chat._id,
-    users: chat.users,
-    lastMessage
+  const lastMessage = {
+    messageId: message._id,
+    content: message.content,
+    timestamp: message.timestamp,
+    senderName: chat.users.find(user => user._id.toString() === message.sender.toString()).name,
+    senderId: message.sender,
   };
 
-  chat.users.forEach(userId => {
-    emitToConnectedClient(userId.toString(), 'chat', changedChat);
+  chat.lastMessage = lastMessage;
+  await chat.save();
+  
+  const changedChat = {
+    _id: chat._id,
+    users: chat.users.map(user => user._id),
+    groupName: chat.groupName,
+    isGroupChat: chat.isGroupChat,
+    pendingApprovals: chat.pendingApprovals,
+    lastMessage: lastMessage,
+    otherUserName: chat.isGroupChat ? chat.groupName : chat.users.find(user => user._id.toString() !== message.sender.toString()).name
+  };
+
+  chat.users.forEach(user => {
+    emitToConnectedClient(user._id.toString(), 'message', message);
+    emitToConnectedClient(user._id.toString(), 'chat', changedChat);
   });
 });
 

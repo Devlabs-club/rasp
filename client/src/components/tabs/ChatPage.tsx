@@ -20,7 +20,8 @@ const ChatPage: React.FC = () => {
         setCurrentChatId, 
         getChats, 
         getMessages, 
-        saveMessage 
+        saveMessage,
+        updateChat
     } = useChatStore();
 
     const { socket } = useSocketStore();
@@ -54,18 +55,30 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         socket?.on('message', (newMessage: ChatMessage) => {
-            console.log(newMessage);
             if(newMessage.chat === currentChatId) {
                 setMessages([...messages, newMessage]);
             }        
+            
+            // Update the chat in the chat list
+            const updatedChat = chats.find(chat => chat._id === newMessage.chat);
+            if (updatedChat) {
+                updatedChat.lastMessage = {
+                    messageId: newMessage._id,
+                    content: newMessage.content,
+                    timestamp: newMessage.timestamp,
+                    senderName: newMessage.sender === user._id ? user.name : updatedChat.otherUserName,
+                    senderId: newMessage.sender
+                };
+                updateChat(updatedChat);
+            }
         });
-    }, [messages, socket, setMessages, currentChatId]);
+    }, [socket, messages, setMessages, currentChatId, chats, updateChat, user._id, user.name]);
 
     useEffect(() => {
-        socket?.on('chat', () => {
-            getChats(user._id);
+        socket?.on('chat', (updatedChat: Chat) => {
+            updateChat(updatedChat);
         });
-    }, [user._id, socket, getChats]);
+    }, [socket, updateChat]);
 
     const handleChatSelect = (chat: Chat) => {
         setCurrentChatId(chat._id);
@@ -87,12 +100,15 @@ const ChatPage: React.FC = () => {
         }
     }, [currentChatId, getMessages, isLoading, page]);
 
+    const getCurrentChat = () => chats.find(chat => chat._id === currentChatId);
+
     return (
         <div className="flex h-full">
             <div className="h-full w-64 text-white p-4" style={{ backgroundColor: '#262626' }}>
                 <h2 className="text-lg font-bold mb-4">chats</h2>
                 <ul className="space-y-2">
-                    {chats.map((chat, index) => (
+                    {chats.map((chat, index) => {
+                        return (
                         <li
                             key={index}
                             onClick={() => handleChatSelect(chat)}
@@ -100,10 +116,10 @@ const ChatPage: React.FC = () => {
                         >
                             <span className="font-medium">{chat.isGroupChat ? chat.groupName : chat.otherUserName}</span>
                             <span>
-                                {chat.lastMessage?.content} - {formatDate(chat.lastMessage?.timestamp)}
+                                {chat.lastMessage?.senderId === user._id ? "You" : chat.lastMessage?.senderName}: {chat.lastMessage?.content} - {formatDate(chat.lastMessage?.timestamp)}
                             </span>
                         </li>
-                    ))}
+                    )})}
                 </ul>
             </div>
             {/* Main Chat Panel */}
@@ -120,8 +136,15 @@ const ChatPage: React.FC = () => {
                             <div className="mt-auto flex flex-col gap-2">
                                 {messages.map((message, index) => {
                                     const isSender = message.sender === user?._id;
+                                    const senderName = isSender ? "You" : getCurrentChat()?.otherUserName || 'Unknown';
                                     return (
-                                        <Message key={index} content={message.content} timestamp={message.timestamp} isSender={isSender} />
+                                        <Message 
+                                            key={index} 
+                                            content={message.content} 
+                                            timestamp={message.timestamp} 
+                                            isSender={isSender}
+                                            senderName={senderName}
+                                        />
                                     );
                                 })}
                             </div>

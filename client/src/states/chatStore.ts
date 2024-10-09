@@ -5,7 +5,7 @@ import { LRUCache } from 'lru-cache';
 interface ChatMessage {
   _id: string;
   sender: string;
-  chat: string; // This is now just the chat ID
+  chat: string;
   content: string;
   timestamp: Date;
 }
@@ -15,6 +15,7 @@ interface LastMessage {
   content: string;
   timestamp: Date;
   senderName: string;
+  senderId: string;
 }
 
 interface Chat {
@@ -23,7 +24,7 @@ interface Chat {
   groupName?: string;
   isGroupChat: boolean;
   pendingApprovals: string[];
-  lastMessage: LastMessage;
+  lastMessage: LastMessage | null;
   otherUserName: string;
 }
 
@@ -42,6 +43,7 @@ interface ChatState {
   createChat: (users: string[], name?: string, isGroupChat?: boolean) => Promise<string>;
   messageCache: LRUCache<string, ChatMessage[]>;
   addMessageToCache: (chatId: string, message: ChatMessage) => void;
+  updateChat: (updatedChat: Chat) => void;
 }
 
 const useChatStore = create<ChatState>((set, get) => ({
@@ -86,7 +88,21 @@ const useChatStore = create<ChatState>((set, get) => ({
     try {
       const response = await axios.post<ChatMessage>(`http://localhost:5000/chat/save/${chatId}`, { senderId, message });
       if (response.status === 201) {
-        set({ message: '' }); 
+        set({ message: '' });
+        
+        // Update the chat locally
+        const { chats, updateChat } = get();
+        const updatedChat = chats.find(chat => chat._id === chatId);
+        if (updatedChat) {
+          updatedChat.lastMessage = {
+            messageId: response.data._id,
+            content: response.data.content,
+            timestamp: response.data.timestamp,
+            senderName: 'You',
+            senderId: senderId
+          };
+          updateChat(updatedChat);
+        }
       }
     } catch (error) {
       console.error('Error saving message:', error);
@@ -111,9 +127,32 @@ const useChatStore = create<ChatState>((set, get) => ({
     set(state => {
       const chatMessages = state.messageCache.get(chatId) || [];
       state.messageCache.set(chatId, [...chatMessages, message]);
+      console.log(state);
       return state;
     });
   },
+  updateChat: (updatedChat: Chat) => set((state) => {
+    const updatedChats = state.chats.map(chat => 
+      chat._id === updatedChat._id ? {
+        ...updatedChat,
+        lastMessage: updatedChat.lastMessage ? {
+          ...updatedChat.lastMessage
+        } : null
+      } : chat
+    );
+    
+    // Sort the chats
+    updatedChats.sort((a, b) => {
+      if (!a.lastMessage) return 1;
+      if (!b.lastMessage) return -1;
+      return new Date(b.lastMessage.timestamp).getTime() - new Date(a.lastMessage.timestamp).getTime();
+    });
+
+    return { 
+      ...state,
+      chats: updatedChats 
+    };
+  }),
 }));
 
 export type { ChatMessage, Chat, LastMessage };
