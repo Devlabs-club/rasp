@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatTime } from '../../utils/formatDateTime'
+import { formatTime } from '../../utils/formatDateTime';
 
 interface MessageProps {
     content: string;

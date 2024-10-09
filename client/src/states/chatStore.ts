@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import { LRUCache } from 'lru-cache';
+import useUserStore from './userStore';
 
 interface ChatMessage {
   _id: string;
@@ -26,6 +27,7 @@ interface Chat {
   pendingApprovals: string[];
   lastMessage: LastMessage | null;
   otherUserName: string;
+  unreadCount: number;
 }
 
 interface ChatState {
@@ -44,6 +46,7 @@ interface ChatState {
   messageCache: LRUCache<string, ChatMessage[]>;
   addMessageToCache: (chatId: string, message: ChatMessage) => void;
   updateChat: (updatedChat: Chat) => void;
+  markMessagesAsRead: (chatId: string) => Promise<void>;
 }
 
 const useChatStore = create<ChatState>((set, get) => ({
@@ -111,11 +114,11 @@ const useChatStore = create<ChatState>((set, get) => ({
   createChat: async (users, name, isGroupChat = false) => {
     try {
       const response = await axios.post<Chat>('http://localhost:5000/chat/create', { users, name, isGroupChat });
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
         return response.data._id;
       }
     } catch (error) {
-      console.error('Error creating chat:', error);
+      console.error('Error creating/getting chat:', error);
     }
     return '';
   },
@@ -134,13 +137,15 @@ const useChatStore = create<ChatState>((set, get) => ({
   updateChat: (updatedChat: Chat) => set((state) => {
     const updatedChats = state.chats.map(chat => 
       chat._id === updatedChat._id ? {
+        ...chat,
         ...updatedChat,
         lastMessage: updatedChat.lastMessage ? {
           ...updatedChat.lastMessage
-        } : null
+        } : null,
+        otherUserName: chat.otherUserName // Preserve the existing otherUserName
       } : chat
     );
-    
+
     // Sort the chats
     updatedChats.sort((a, b) => {
       if (!a.lastMessage) return 1;
@@ -153,6 +158,19 @@ const useChatStore = create<ChatState>((set, get) => ({
       chats: updatedChats 
     };
   }),
+  markMessagesAsRead: async (chatId) => {
+    try {
+      const { user } = useUserStore.getState();
+      await axios.post(`http://localhost:5000/chat/markAsRead/${chatId}`, { userId: user._id });
+      set(state => ({
+        chats: state.chats.map(chat => 
+          chat._id === chatId ? { ...chat, unreadCount: 0 } : chat
+        )
+      }));
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  },
 }));
 
 export type { ChatMessage, Chat, LastMessage };

@@ -19,23 +19,21 @@ const useSocketStore = create<SocketState>((set) => ({
 
     newSocket.on('message', (newMessage: ChatMessage) => {
       const chatStore = useChatStore.getState();
-      const userStore = useUserStore.getState();
       chatStore.addMessageToCache(newMessage.chat, newMessage);
+      
+      // Check if the current chat is the one receiving the message
       if (newMessage.chat === chatStore.currentChatId) {
         chatStore.setMessages([...chatStore.messages, newMessage]);
-      }
-
-      // Update the chat in the chat list
-      const updatedChat = chatStore.chats.find(chat => chat._id === newMessage.chat);
-      if (updatedChat) {
-        updatedChat.lastMessage = {
-          messageId: newMessage._id,
-          content: newMessage.content,
-          timestamp: newMessage.timestamp,
-          senderName: newMessage.sender === userStore.user._id ? userStore.user.name : updatedChat.otherUserName,
-          senderId: newMessage.sender  // Add this line
-        };
-        chatStore.updateChat(updatedChat);
+        chatStore.markMessagesAsRead(newMessage.chat);
+      } else {
+        // Increment unread count for the chat
+        const chat = chatStore.chats.find(chat => chat._id === newMessage.chat);
+        if (chat) {
+          chatStore.updateChat({
+            ...chat,
+            unreadCount: (chat.unreadCount || 0) + 1
+          });
+        }
       }
     });
   },

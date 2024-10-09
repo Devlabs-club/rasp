@@ -64,6 +64,7 @@ const saveMessage = async (req, res) => {
     chat: req.params.chatId,
     content: req.body.message,
     timestamp: Date.now(),
+    readBy: [req.body.senderId]
   });
 
   chat.messages.push(newMessage._id);
@@ -74,13 +75,34 @@ const saveMessage = async (req, res) => {
     senderName: sender.name,
     senderId: sender._id
   };
+
+  // Increment unread message count for other users
+  chat.unreadMessages.forEach(unread => {
+    if (unread.user.toString() !== req.body.senderId) {
+      unread.count += 1;
+    }
+  });
+
   await chat.save();
   
   res.status(201).json(newMessage);
 }
 
+
 const createChat = async (req, res) => {
   const { users, name, isGroupChat } = req.body;
+
+  // Check if a non-group chat already exists between these users
+  if (!isGroupChat) {
+    const existingChat = await Chat.findOne({
+      users: { $all: users, $size: 2 },
+      isGroupChat: false
+    });
+
+    if (existingChat) {
+      return res.status(200).json(existingChat);
+    }
+  }
 
   const chat = await Chat.create({
     users,
@@ -141,6 +163,34 @@ const approveGroupChatRequest = async (req, res) => {
   res.status(200).json(chat);
 }
 
+const markMessagesAsRead = async (req, res) => {
+  const { chatId } = req.params;
+  const { userId } = req.body;
+
+  const chat = await Chat.findById(chatId);
+  if (!chat) {
+    return res.status(404).json({ message: 'Chat not found' });
+  }
+
+  // Mark all messages as read
+  await Message.updateMany(
+    { chat: chatId, readBy: { $ne: userId } },
+    { $addToSet: { readBy: userId } }
+  );
+
+  // Reset unread count for the user
+  const unreadIndex = chat.unreadMessages.findIndex(
+    unread => unread.user.toString() === userId
+  );
+  if (unreadIndex !== -1) {
+    chat.unreadMessages[unreadIndex].count = 0;
+    await chat.save();
+  }
+
+  res.status(200).json({ message: 'Messages marked as read' });
+};
+
+
 const messageChangeStream = Message.watch();
 messageChangeStream.on('change', async (change) => {
   if(change.operationType !== 'insert') return;
@@ -169,10 +219,12 @@ messageChangeStream.on('change', async (change) => {
     otherUserName: chat.isGroupChat ? chat.groupName : chat.users.find(user => user._id.toString() !== message.sender.toString()).name
   };
 
+
   chat.users.forEach(user => {
     emitToConnectedClient(user._id.toString(), 'message', message);
     emitToConnectedClient(user._id.toString(), 'chat', changedChat);
   });
 });
 
-export { getMessages, saveMessage, getChats, createChat, updateGroupChat, approveGroupChatRequest };
+
+export { getMessages, saveMessage, getChats, createChat, updateGroupChat, approveGroupChatRequest, markMessagesAsRead };

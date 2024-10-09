@@ -44,6 +44,12 @@ const chatSchema = new Schema({
         type: Date, 
         default: Date.now 
     },
+    unreadMessages: [
+        {
+            user: { type: Schema.Types.ObjectId, ref: 'User' },
+            count: { type: Number, default: 0 }
+        }
+    ],
 });
 
 export default mongoose.model("Chat", chatSchema);

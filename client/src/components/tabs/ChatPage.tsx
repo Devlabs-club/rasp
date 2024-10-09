@@ -21,7 +21,8 @@ const ChatPage: React.FC = () => {
         getChats, 
         getMessages, 
         saveMessage,
-        updateChat
+        updateChat,
+        markMessagesAsRead
     } = useChatStore();
 
     const { socket } = useSocketStore();
@@ -33,6 +34,7 @@ const ChatPage: React.FC = () => {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+
 
     useEffect(() => {
         setMessages([]);
@@ -55,6 +57,8 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         socket?.on('message', (newMessage: ChatMessage) => {
+            console.log(newMessage);
+            
             if(newMessage.chat === currentChatId) {
                 setMessages([...messages, newMessage]);
             }        
@@ -80,8 +84,9 @@ const ChatPage: React.FC = () => {
         });
     }, [socket, updateChat]);
 
-    const handleChatSelect = (chat: Chat) => {
+    const handleChatSelect = async (chat: Chat) => {
         setCurrentChatId(chat._id);
+        await markMessagesAsRead(chat._id);
     };
 
     const handleSaveMessage = async () => {
@@ -100,26 +105,39 @@ const ChatPage: React.FC = () => {
         }
     }, [currentChatId, getMessages, isLoading, page]);
 
-    const getCurrentChat = () => chats.find(chat => chat._id === currentChatId);
+    const getCurrentChat = useCallback(() => {
+        const chat = chats.find(chat => chat._id === currentChatId);
+        if (chat && !chat.isGroupChat) {
+            // const otherUserId = chat.users.find(userId => userId !== user._id);
+            chat.otherUserName = chats.find(c => c._id === chat._id)?.otherUserName || 'Unknown';
+        }
+        return chat;
+    }, [chats, currentChatId]);
 
     return (
         <div className="flex h-full">
             <div className="h-full w-64 text-white p-4" style={{ backgroundColor: '#262626' }}>
                 <h2 className="text-lg font-bold mb-4">chats</h2>
                 <ul className="space-y-2">
-                    {chats.map((chat, index) => {
-                        return (
+                    {chats.map((chat, index) => (
                         <li
                             key={index}
                             onClick={() => handleChatSelect(chat)}
                             className={`flex flex-col p-2 rounded-md cursor-pointer transition-all ${chat._id === currentChatId ? "bg-gray-600" : "bg-neutral-900"}`}
                         >
-                            <span className="font-medium">{chat.isGroupChat ? chat.groupName : chat.otherUserName}</span>
+                            <span className="font-medium flex justify-between">
+                                {chat.isGroupChat ? chat.groupName : chat.otherUserName}
+                                {chat.unreadCount > 0 && (
+                                    <span className="bg-orange-500 text-white rounded-full px-2 py-1 text-xs">
+                                        {chat.unreadCount}
+                                    </span>
+                                )}
+                            </span>
                             <span>
                                 {chat.lastMessage?.senderId === user._id ? "You" : chat.lastMessage?.senderName}: {chat.lastMessage?.content} - {formatDate(chat.lastMessage?.timestamp)}
                             </span>
                         </li>
-                    )})}
+                    ))}
                 </ul>
             </div>
             {/* Main Chat Panel */}
@@ -160,5 +178,6 @@ const ChatPage: React.FC = () => {
         </div>
     );
 };
+
 
 export default ChatPage;
