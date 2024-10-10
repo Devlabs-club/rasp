@@ -63,8 +63,7 @@ const saveMessage = async (req, res) => {
     sender: req.body.senderId,
     chat: req.params.chatId,
     content: req.body.message,
-    timestamp: Date.now(),
-    readBy: [req.body.senderId]
+    timestamp: Date.now()
   });
 
   chat.messages.push(newMessage._id);
@@ -76,18 +75,10 @@ const saveMessage = async (req, res) => {
     senderId: sender._id
   };
 
-  // Increment unread message count for other users
-  chat.unreadMessages.forEach(unread => {
-    if (unread.user.toString() !== req.body.senderId) {
-      unread.count += 1;
-    }
-  });
-
   await chat.save();
   
   res.status(201).json(newMessage);
 }
-
 
 const createChat = async (req, res) => {
   const { users, name, isGroupChat } = req.body;
@@ -163,34 +154,6 @@ const approveGroupChatRequest = async (req, res) => {
   res.status(200).json(chat);
 }
 
-const markMessagesAsRead = async (req, res) => {
-  const { chatId } = req.params;
-  const { userId } = req.body;
-
-  const chat = await Chat.findById(chatId);
-  if (!chat) {
-    return res.status(404).json({ message: 'Chat not found' });
-  }
-
-  // Mark all messages as read
-  await Message.updateMany(
-    { chat: chatId, readBy: { $ne: userId } },
-    { $addToSet: { readBy: userId } }
-  );
-
-  // Reset unread count for the user
-  const unreadIndex = chat.unreadMessages.findIndex(
-    unread => unread.user.toString() === userId
-  );
-  if (unreadIndex !== -1) {
-    chat.unreadMessages[unreadIndex].count = 0;
-    await chat.save();
-  }
-
-  res.status(200).json({ message: 'Messages marked as read' });
-};
-
-
 const messageChangeStream = Message.watch();
 messageChangeStream.on('change', async (change) => {
   if(change.operationType !== 'insert') return;
@@ -226,5 +189,4 @@ messageChangeStream.on('change', async (change) => {
   });
 });
 
-
-export { getMessages, saveMessage, getChats, createChat, updateGroupChat, approveGroupChatRequest, markMessagesAsRead };
+export { getMessages, saveMessage, getChats, createChat, updateGroupChat, approveGroupChatRequest };

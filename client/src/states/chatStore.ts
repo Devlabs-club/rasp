@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import { LRUCache } from 'lru-cache';
-import useUserStore from './userStore';
 
 interface ChatMessage {
   _id: string;
@@ -27,7 +26,6 @@ interface Chat {
   pendingApprovals: string[];
   lastMessage: LastMessage | null;
   otherUserName: string;
-  unreadCount: number;
 }
 
 interface ChatState {
@@ -46,7 +44,6 @@ interface ChatState {
   messageCache: LRUCache<string, ChatMessage[]>;
   addMessageToCache: (chatId: string, message: ChatMessage) => void;
   updateChat: (updatedChat: Chat) => void;
-  markMessagesAsRead: (chatId: string) => Promise<void>;
 }
 
 const useChatStore = create<ChatState>((set, get) => ({
@@ -158,19 +155,6 @@ const useChatStore = create<ChatState>((set, get) => ({
       chats: updatedChats 
     };
   }),
-  markMessagesAsRead: async (chatId) => {
-    try {
-      const { user } = useUserStore.getState();
-      await axios.post(`http://localhost:5000/chat/markAsRead/${chatId}`, { userId: user._id });
-      set(state => ({
-        chats: state.chats.map(chat => 
-          chat._id === chatId ? { ...chat, unreadCount: 0 } : chat
-        )
-      }));
-    } catch (error) {
-      console.error('Error marking messages as read:', error);
-    }
-  },
 }));
 
 export type { ChatMessage, Chat, LastMessage };

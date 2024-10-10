@@ -24,16 +24,6 @@ const useSocketStore = create<SocketState>((set) => ({
       // Check if the current chat is the one receiving the message
       if (newMessage.chat === chatStore.currentChatId) {
         chatStore.setMessages([...chatStore.messages, newMessage]);
-        chatStore.markMessagesAsRead(newMessage.chat);
-      } else {
-        // Increment unread count for the chat
-        const chat = chatStore.chats.find(chat => chat._id === newMessage.chat);
-        if (chat) {
-          chatStore.updateChat({
-            ...chat,
-            unreadCount: (chat.unreadCount || 0) + 1
-          });
-        }
       }
     });
   },

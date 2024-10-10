@@ -21,8 +21,7 @@ const ChatPage: React.FC = () => {
         getChats, 
         getMessages, 
         saveMessage,
-        updateChat,
-        markMessagesAsRead
+        updateChat
     } = useChatStore();
 
     const { socket } = useSocketStore();
@@ -86,7 +85,6 @@ const ChatPage: React.FC = () => {
 
     const handleChatSelect = async (chat: Chat) => {
         setCurrentChatId(chat._id);
-        await markMessagesAsRead(chat._id);
     };
 
     const handleSaveMessage = async () => {
@@ -127,11 +125,6 @@ const ChatPage: React.FC = () => {
                         >
                             <span className="font-medium flex justify-between">
                                 {chat.isGroupChat ? chat.groupName : chat.otherUserName}
-                                {chat.unreadCount > 0 && (
-                                    <span className="bg-orange-500 text-white rounded-full px-2 py-1 text-xs">
-                                        {chat.unreadCount}
-                                    </span>
-                                )}
                             </span>
                             <span>
                                 {chat.lastMessage?.senderId === user._id ? "You" : chat.lastMessage?.senderName}: {chat.lastMessage?.content} - {formatDate(chat.lastMessage?.timestamp)}
