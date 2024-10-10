@@ -113,7 +113,13 @@ const useChatStore = create<ChatState>((set, get) => ({
         }
       }
     } catch (error) {
-      console.error('Error saving message:', error);
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        const remainingCooldown = error.response.data.remainingCooldown;
+        console.error(`Message sending on cooldown. Please wait ${Math.ceil(remainingCooldown / 1000)} seconds.`);
+      } else {
+        console.error('Error saving message:', error);
+      }
+      throw error;
     }
   },
   createChat: async (users, name, isGroupChat = false) => {

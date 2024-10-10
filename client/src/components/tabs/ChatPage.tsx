@@ -95,8 +95,14 @@ const ChatPage: React.FC = () => {
     };
 
     const handleSaveMessage = async () => {
-        await saveMessage(currentChatId, user._id, message);
-        setMessage("");
+        try {
+            await saveMessage(currentChatId, user._id, message);
+            setMessage("");
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 429) {
+                alert(error.response.data.error);
+            }
+        }
     };
 
     const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {

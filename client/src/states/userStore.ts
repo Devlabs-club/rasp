@@ -11,6 +11,8 @@ interface UserState {
   setStatus: (status: { content: string; duration: string }) => void;
   fetchUserStatus: (userId: string) => Promise<void>;
   updateUserStatus: (userId: string, content: string, duration: string) => Promise<void>;
+  isUpdatingStatus: boolean;
+  isUpdatingProfile: boolean;
 }
 
 const useUserStore = create<UserState>((set) => ({
@@ -21,6 +23,8 @@ const useUserStore = create<UserState>((set) => ({
     duration: '',
   },
   setStatus: (status) => set({ status }),
+  isUpdatingStatus: false,
+  isUpdatingProfile: false,
   fetchUserStatus: async (userId) => {
     try {
       const response = await axios.get(`http://localhost:5000/user/status/${userId}`);
@@ -30,11 +34,35 @@ const useUserStore = create<UserState>((set) => ({
     }
   },
   updateUserStatus: async (userId, content, duration) => {
+    set({ isUpdatingStatus: true });
     try {
       await axios.patch('http://localhost:5000/user/status', { status: content, duration, userId });
-      set({ status: { content, duration } });
+      set({ status: { content, duration }, isUpdatingStatus: false });
     } catch (error) {
-      console.error('Error updating user status:', error);
+      set({ isUpdatingStatus: false });
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        const remainingCooldown = error.response.data.remainingCooldown;
+        console.error(`Status update on cooldown. Please wait ${Math.ceil(remainingCooldown / 1000)} seconds.`);
+      } else {
+        console.error('Error updating user status:', error);
+      }
+      throw error;
+    }
+  },
+  updateUserProfile: async (userData: any) => {
+    set({ isUpdatingProfile: true });
+    try {
+      await axios.post('http://localhost:5000/user/save', { user: userData });
+      set({ user: userData, isUpdatingProfile: false });
+    } catch (error) {
+      set({ isUpdatingProfile: false });
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        const remainingCooldown = error.response.data.remainingCooldown;
+        console.error(`Profile update on cooldown. Please wait ${Math.ceil(remainingCooldown / 1000)} seconds.`);
+      } else {
+        console.error('Error updating user profile:', error);
+      }
+      throw error;
     }
   },
 }));

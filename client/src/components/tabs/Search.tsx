@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import UserCard from "../user/UserCard";
 import SelectedUserCard from "../user/SelectedUserCard";
 import Heading from "../text/Heading";
@@ -21,11 +21,14 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
     query, 
     searchResults, 
     selectedUser, 
+    error,
     setQuery, 
     setSelectedUser, 
     searchUser 
   } = useSearchStore();
   const { createChat } = useChatStore();
+
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     fetchUserStatus(user?._id);
@@ -33,7 +36,9 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSearching(true);
     await searchUser(query, user);
+    setIsSearching(false);
   };
 
   const openChat = async (receiverId: string) => {
@@ -75,10 +80,18 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
             autoComplete="off"
             maxLength={80}
           />
-          <button type="submit" className="px-4 py-2 bg-white text-neutral-800 rounded-md">
-            Search
+          <button 
+            type="submit" 
+            className={`px-4 py-2 bg-white text-neutral-800 rounded-md ${isSearching ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isSearching}
+          >
+            {isSearching ? 'Searching...' : 'Search'}
           </button>
         </form>
+
+        {error && (
+          <div className="text-red-500 mt-2">{error}</div>
+        )}
 
         <form>
           <Input
