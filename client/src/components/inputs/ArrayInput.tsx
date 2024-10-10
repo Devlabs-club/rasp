@@ -7,21 +7,33 @@ interface ArrayInputProps {
     placeholder: string;
     items: string[];
     setItems: (items: string[]) => void;
+    maxLength?: number;
+    maxItems?: number;
 }
 
-const ArrayInput: React.FC<ArrayInputProps> = ({ label, name, placeholder, items, setItems }) => {
+const ArrayInput: React.FC<ArrayInputProps> = ({ label, name, placeholder, items, setItems, maxLength, maxItems }) => {
     const [value, setValue] = useState<string>("");
 
     const addItem = () => {
         if (!value.trim() || items.includes(value)) return setValue("");
+        if (maxItems && items.length >= maxItems) return;
 
         setItems([...items, value]);
-
         setValue("");
     }
 
     const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") addItem();
+        if (e.key === "Enter") {
+            e.preventDefault();
+            addItem();
+        }
+    }
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        if (maxLength === undefined || newValue.length <= maxLength) {
+            setValue(newValue);
+        }
     }
 
     return (
@@ -40,20 +52,28 @@ const ArrayInput: React.FC<ArrayInputProps> = ({ label, name, placeholder, items
                     </span>
                 )) : <></>}
 
-                <input
-                    type="text"
-                    autoComplete="off"
-                    id={name}
-                    name={name}
-                    placeholder={!items.length ? placeholder : "..."}
-                    value={value}
-                    className='text-neutral-200 outline-none bg-neutral-800 flex-grow'
-                    onChange={(e) => setValue(e.target.value)}
-                    onKeyDown={onKeyDown}
-                />
+                {(!maxItems || items.length < maxItems) && (
+                    <input
+                        type="text"
+                        autoComplete="off"
+                        id={name}
+                        name={name}
+                        placeholder={!items.length ? placeholder : "..."}
+                        value={value}
+                        className='text-neutral-200 outline-none bg-neutral-800 flex-grow'
+                        onChange={handleChange}
+                        onKeyDown={onKeyDown}
+                        maxLength={maxLength}
+                    />
+                )}
 
-                <button onClick={addItem} className="text-xl place-self-end">+</button>
+                {(!maxItems || items.length < maxItems) && (
+                    <button onClick={addItem} className="text-xl place-self-end">+</button>
+                )}
             </div>
+            {maxItems && (
+                <p className="text-sm text-gray-400">{items.length}/{maxItems} items</p>
+            )}
         </div>
     )
 }

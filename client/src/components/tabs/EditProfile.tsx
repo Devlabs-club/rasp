@@ -90,6 +90,7 @@ const UserProfile = () => {
                         setValue={(value: string) => {
                             setUserData((userData: any) => ({ ...userData, name: value }));
                         }}
+                        maxLength={40}
                     />
                     <SelectInput
                         label="your gender"
@@ -126,6 +127,7 @@ const UserProfile = () => {
                         setValue={(value: string) => {
                             setUserData((userData: any) => ({ ...userData, about: { ...userData.about, major: value } }));
                         }}
+                        maxLength={50}
                     />
                     <ArrayInput
                         label="your skills"
@@ -133,6 +135,8 @@ const UserProfile = () => {
                         placeholder="e.g. running, business, etc."
                         items={userData.about.skills}
                         setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, skills: items } }))}
+                        maxLength={20}
+                        maxItems={10}
                     />
                     <ArrayInput
                         label="your hobbies"
@@ -140,6 +144,8 @@ const UserProfile = () => {
                         placeholder="e.g. ping-pong, shrimping, etc."
                         items={userData.about.hobbies}
                         setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, hobbies: items } }))}
+                        maxLength={30}
+                        maxItems={10}
                     />
                     <ArrayInput
                         label="your socials (must start with http/https)"
@@ -147,6 +153,8 @@ const UserProfile = () => {
                         placeholder="e.g. linkedin, github, etc."
                         items={userData.about.socials}
                         setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, socials: items.filter(item => item.startsWith("http")) } }))}
+                        maxLength={100}
+                        maxItems={5}
                     />
                     <TextBox
                         label="anything else about you"
@@ -154,6 +162,7 @@ const UserProfile = () => {
                         placeholder="i lived a simple life, experienced so much, and then..."
                         value={userData.about.bio}
                         setValue={(value: string) => setUserData({ ...userData, about: { ...userData.about, bio: value } })}
+                        maxLength={500}
                     />
                     
                     <SubmitButton onClick={saveUser} />

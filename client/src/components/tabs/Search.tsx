@@ -73,6 +73,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQuery(e.target.value)}
             className="bg-neutral-800 p-3 text-neutral-200 rounded-md w-96"
             autoComplete="off"
+            maxLength={80}
           />
           <button type="submit" className="px-4 py-2 bg-white text-neutral-800 rounded-md">
             Search
@@ -88,6 +89,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
             setValue={(value: string) => {
               setStatus({ ...status, content: value });
             }}
+            maxLength={100} // Set a maximum length for the status input
           />
 
           <SelectInput 

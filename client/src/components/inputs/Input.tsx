@@ -6,9 +6,10 @@ interface InputProps {
   placeholder: string;
   value: string;
   setValue: (value: string) => void;
+  maxLength?: number;
 }
 
-const Input: FC<InputProps> = ({ label, name, placeholder, value, setValue }) => {
+const Input: FC<InputProps> = ({ label, name, placeholder, value, setValue, maxLength }) => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
@@ -24,6 +25,7 @@ const Input: FC<InputProps> = ({ label, name, placeholder, value, setValue }) =>
         placeholder={placeholder}
         value={value}
         onChange={handleChange}
+        maxLength={maxLength}
         className="bg-neutral-800 p-3 text-neutral-200 rounded-md"
       />
     </div>
