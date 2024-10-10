@@ -10,7 +10,7 @@ interface SocketState {
 const useSocketStore = create<SocketState>((set) => ({
   socket: null,
   connectSocket: (userId: string) => {
-    const newSocket = io("http://localhost:5000", {
+    const newSocket = io(`${process.env.REACT_APP_SERVER_URL}`, {
       query: { userId }
     });
     set({ socket: newSocket });

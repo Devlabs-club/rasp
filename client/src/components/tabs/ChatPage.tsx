@@ -118,7 +118,7 @@ const ChatPage: React.FC = () => {
 
     const markChatAsRead = async (chatId: string) => {
         try {
-            await axios.post(`http://localhost:5000/chat/markAsRead/${chatId}`, { userId: user._id });
+            await axios.post(`${process.env.REACT_APP_SERVER_URL}/chat/markAsRead/${chatId}`, { userId: user._id });
             const updatedChats = chats.map(chat => 
                 chat._id === chatId ? { ...chat, unreadMessages: { ...chat.unreadMessages, [user._id]: false } } : chat
             );

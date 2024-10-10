@@ -31,7 +31,7 @@ const useSearchStore = create<SearchState>((set) => ({
   setError: (error) => set({ error }),  // Add this line
   searchUser: async (query, currentUser) => {
     try {
-      const response = await axios.post("http://localhost:5000/user/search", { query, user: currentUser });
+      const response = await axios.post(`${process.env.REACT_APP_SERVER_URL}/user/search`, { query, user: currentUser });
       set({ searchResults: response.data, error: null });
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {

@@ -35,8 +35,8 @@ const Dashboard: React.FC = () => {
         navigate("/signin");
         return;
       }
-      try {
-        const { data } = await axios.post("http://localhost:5000", {}, { withCredentials: true });
+      try { 
+        const { data } = await axios.post(`${process.env.REACT_APP_SERVER_URL}`, {}, { withCredentials: true });
         const { status, user } = data;
         
         if (status) {

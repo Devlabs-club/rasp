@@ -26,8 +26,8 @@ const useUserStore = create<UserState>((set) => ({
   isUpdatingStatus: false,
   isUpdatingProfile: false,
   fetchUserStatus: async (userId) => {
-    try {
-      const response = await axios.get(`http://localhost:5000/user/status/${userId}`);
+    try { 
+      const response = await axios.get(`${process.env.REACT_APP_SERVER_URL}/user/status/${userId}`);
       set({ status: response.data });
     } catch (error) {
       console.error('Error fetching user status:', error);
@@ -35,8 +35,8 @@ const useUserStore = create<UserState>((set) => ({
   },
   updateUserStatus: async (userId, content, duration) => {
     set({ isUpdatingStatus: true });
-    try {
-      await axios.patch('http://localhost:5000/user/status', { status: content, duration, userId });
+    try {   
+      await axios.patch(`${process.env.REACT_APP_SERVER_URL}/user/status`, { status: content, duration, userId });
       set({ status: { content, duration }, isUpdatingStatus: false });
     } catch (error) {
       set({ isUpdatingStatus: false });
@@ -51,8 +51,8 @@ const useUserStore = create<UserState>((set) => ({
   },
   updateUserProfile: async (userData: any) => {
     set({ isUpdatingProfile: true });
-    try {
-      await axios.post('http://localhost:5000/user/save', { user: userData });
+    try { 
+      await axios.post(`${process.env.REACT_APP_SERVER_URL}/user/save`, { user: userData });
       set({ user: userData, isUpdatingProfile: false });
     } catch (error) {
       set({ isUpdatingProfile: false });

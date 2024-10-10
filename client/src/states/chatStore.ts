@@ -59,7 +59,7 @@ const useChatStore = create<ChatState>((set, get) => ({
   setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
   getChats: async (userId) => {
     try {
-      const response = await axios.get<Chat[]>(`http://localhost:5000/chat/getall/${userId}`);
+      const response = await axios.get<Chat[]>(`${process.env.REACT_APP_SERVER_URL}/chat/getall/${userId}`);
       set({ chats: response.data });
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -74,7 +74,7 @@ const useChatStore = create<ChatState>((set, get) => ({
       }
 
       const response = await axios.get<ChatMessage[]>(
-        `http://localhost:5000/chat/get/${chatId}?page=${page}&limit=${limit}`
+        `${process.env.REACT_APP_SERVER_URL}/chat/get/${chatId}?page=${page}&limit=${limit}`
       );
       set(state => {
         const newMessages = response.data;
@@ -90,7 +90,7 @@ const useChatStore = create<ChatState>((set, get) => ({
   },
   saveMessage: async (chatId, senderId, message) => {
     try {
-      const response = await axios.post<ChatMessage>(`http://localhost:5000/chat/save/${chatId}`, { senderId, message });
+      const response = await axios.post<ChatMessage>(`${process.env.REACT_APP_SERVER_URL}/chat/save/${chatId}`, { senderId, message });
       if (response.status === 201) {
         set({ message: '' });
         
@@ -124,7 +124,7 @@ const useChatStore = create<ChatState>((set, get) => ({
   },
   createChat: async (users, name, isGroupChat = false) => {
     try {
-      const response = await axios.post<Chat>('http://localhost:5000/chat/create', { users, name, isGroupChat });
+      const response = await axios.post<Chat>(`${process.env.REACT_APP_SERVER_URL}/chat/create`, { users, name, isGroupChat });
       if (response.status === 201 || response.status === 200) {
         const newChat = {
           ...response.data,

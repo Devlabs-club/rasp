@@ -66,7 +66,7 @@ const UserProfile = () => {
             return;
         };
 
-        const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
+        const response = await axios.patch(`${process.env.REACT_APP_SERVER_URL}/user/save`, { user: { ...user, ...userData } });
         if (response.status === 201) {
             alert("User saved successfully");
         }    

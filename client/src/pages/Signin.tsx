@@ -29,7 +29,7 @@ const Signin: React.FC = () => {
 
     const handleGoogleAuth = async ({ code }: GoogleAuthResponse) => {   
         try {
-            const { data } = await axios.post<AuthResponse>("http://localhost:5000/auth/google", { code }, { withCredentials: true });
+            const { data } = await axios.post<AuthResponse>(`${process.env.REACT_APP_SERVER_URL}/auth/google`, { code }, { withCredentials: true });
     
             const { success, message } = data;
             if (success) {
