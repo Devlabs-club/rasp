@@ -38,7 +38,8 @@
     "natural": "^8.0.1",
     "nodemon": "^3.1.4",
     "peggy": "^4.0.3",
-    "socket.io": "^4.8.0"
+    "socket.io": "^4.8.0",
+    "uuid": "^10.0.0"
   },
   "type": "module",
   "devDependencies": {

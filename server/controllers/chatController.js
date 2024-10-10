@@ -3,6 +3,20 @@ import Message from '../models/messageModel.js';
 import { User } from '../models/userModel.js';
 import { emitToConnectedClient, publish } from '../utils/connectedClients.js';
 
+const messageCooldowns = new Map();
+const MESSAGE_COOLDOWN_DURATION = 1000; // 1 second
+
+const checkMessageCooldown = (userId) => {
+  const now = Date.now();
+  const lastMessageTime = messageCooldowns.get(userId) || 0;
+  if (now - lastMessageTime < MESSAGE_COOLDOWN_DURATION) {
+    const remainingCooldown = MESSAGE_COOLDOWN_DURATION - (now - lastMessageTime);
+    return { onCooldown: true, remainingCooldown };
+  }
+  messageCooldowns.set(userId, now);
+  return { onCooldown: false };
+};
+
 const getChats = async (req, res) => {
   const chatDocuments = await Chat.find({ 
     users: { $all: [req.params.userId] },
@@ -52,6 +66,16 @@ const getMessages = async (req, res) => {
 }
 
 const saveMessage = async (req, res) => {
+  const senderId = req.body.senderId;
+  const { onCooldown, remainingCooldown } = checkMessageCooldown(senderId);
+  
+  if (onCooldown) {
+    return res.status(429).json({ 
+      error: 'Please wait before sending another message.',
+      remainingCooldown
+    });
+  }
+
   const chat = await Chat.findById(req.params.chatId);
   if (!chat) {
     return res.status(404).json({ message: 'Chat not found' });
@@ -62,11 +86,16 @@ const saveMessage = async (req, res) => {
     return res.status(404).json({ message: 'Sender not found' });
   }
 
+  // Check if the message content is empty or only whitespace
+  if (!req.body.message || req.body.message.trim() === '') {
+    return res.status(400).json({ message: 'Message content cannot be empty' });
+  }
+
   const newMessage = await Message.create({
     sender: req.body.senderId,
     senderName: sender.name,
     chat: req.params.chatId,
-    content: req.body.message,
+    content: req.body.message.trim(),
     timestamp: Date.now()
   });
 
