@@ -11,6 +11,7 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 
 const userVerification = async (req, res) => {
+  console.log(req.cookies);
   const token = req.cookies.token;
   if (!token) {
     return res.json({ status: false });
