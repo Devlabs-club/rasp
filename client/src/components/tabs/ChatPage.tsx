@@ -6,6 +6,7 @@ import Message from "../chat/Message";
 import { formatDate } from "../../utils/formatDateTime";
 import Input from "../inputs/Input";
 import SubmitButton from "../inputs/SubmitButton";
+import axios from 'axios';
 
 const ChatPage: React.FC = () => {
     const { user } = useUserStore();
@@ -14,7 +15,6 @@ const ChatPage: React.FC = () => {
         messages, 
         currentChatId, 
         message,
-        messageCache,
         setMessage,
         setMessages, 
         setCurrentChatId, 
@@ -22,7 +22,8 @@ const ChatPage: React.FC = () => {
         getMessages, 
         saveMessage,
         updateChat,
-        addMessageToCache
+        addMessageToCache,
+        setChats
     } = useChatStore();
 
     const { socket } = useSocketStore();
@@ -43,13 +44,9 @@ const ChatPage: React.FC = () => {
 
         if (currentChatId) {
             setPage(1);
-            if (messageCache.get(currentChatId)) {
-                setMessages(messageCache.get(currentChatId) || []);
-            } else {
-                getMessages(currentChatId, 1, 50);
-            }
+            getMessages(currentChatId, 1, 50);
         }
-    }, [user, currentChatId, getChats, getMessages, setMessages, setMessage, messageCache]);
+    }, [user, currentChatId, getChats, getMessages, setMessages, setMessage]);
 
     useEffect(() => {
         scrollToBottom();
@@ -57,14 +54,12 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         socket?.on('message', (newMessage: ChatMessage) => {
-            // Add message to cache
             addMessageToCache(newMessage.chat, newMessage);
             
             if(newMessage.chat === currentChatId) {
                 setMessages([...messages, newMessage]);
             }        
             
-            // Update the chat in the chat list
             const updatedChat = chats.find(chat => chat._id === newMessage.chat);
             if (updatedChat) {
                 updatedChat.lastMessage = {
@@ -74,6 +69,9 @@ const ChatPage: React.FC = () => {
                     senderName: newMessage.sender === user._id ? user.name : updatedChat.otherUserName,
                     senderId: newMessage.sender
                 };
+                if (newMessage.sender !== user._id && newMessage.chat !== currentChatId) {
+                    updatedChat.unreadMessages = { ...updatedChat.unreadMessages, [user._id]: true };
+                }
                 updateChat(updatedChat);
             }
         });
@@ -91,6 +89,9 @@ const ChatPage: React.FC = () => {
 
     const handleChatSelect = async (chat: Chat) => {
         setCurrentChatId(chat._id);
+        if (chat.unreadMessages && chat.unreadMessages[user._id]) {
+            await markChatAsRead(chat._id);
+        }
     };
 
     const handleSaveMessage = async () => {
@@ -109,14 +110,17 @@ const ChatPage: React.FC = () => {
         }
     }, [currentChatId, getMessages, isLoading, page]);
 
-    // const getCurrentChat = useCallback(() => {
-    //     const chat = chats.find(chat => chat._id === currentChatId);
-    //     if (chat && !chat.isGroupChat) {
-    //         // const otherUserId = chat.users.find(userId => userId !== user._id);
-    //         chat.otherUserName = chats.find(c => c._id === chat._id)?.otherUserName || 'Unknown';
-    //     }
-    //     return chat;
-    // }, [chats, currentChatId]);
+    const markChatAsRead = async (chatId: string) => {
+        try {
+            await axios.post(`http://localhost:5000/chat/markAsRead/${chatId}`, { userId: user._id });
+            const updatedChats = chats.map(chat => 
+                chat._id === chatId ? { ...chat, unreadMessages: { ...chat.unreadMessages, [user._id]: false } } : chat
+            );
+            setChats(updatedChats);
+        } catch (error) {
+            console.error('Error marking chat as read:', error);
+        }
+    };
 
     return (
         <div className="flex h-full">
@@ -129,13 +133,16 @@ const ChatPage: React.FC = () => {
                             onClick={() => handleChatSelect(chat)}
                             className={`flex flex-col p-2 rounded-md cursor-pointer transition-all ${chat._id === currentChatId ? "bg-gray-600" : "bg-neutral-900"}`}
                         >
-                            <span className="font-medium flex justify-between">
+                            <span className="font-medium flex justify-between items-center">
                                 {chat.isGroupChat ? chat.groupName : chat.otherUserName}
+                                {chat.unreadMessages && chat.unreadMessages[user._id] && (
+                                    <span className="w-3 h-3 bg-orange-500 rounded-full"></span>
+                                )}
                             </span>
                             <span>
                                 {chat.lastMessage?.senderId === user._id ? "You" : chat.lastMessage?.senderName}: {chat.lastMessage?.content} - {formatDate(chat.lastMessage?.timestamp)}
                             </span>
-                        </li>
+                            </li>
                     ))}
                 </ul>
             </div>

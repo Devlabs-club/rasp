@@ -44,6 +44,11 @@ const chatSchema = new Schema({
         type: Date, 
         default: Date.now 
     },
+    unreadMessages: {
+        type: Map,
+        of: Boolean,
+        default: new Map()
+    },
 });
 
 export default mongoose.model("Chat", chatSchema);

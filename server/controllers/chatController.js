@@ -81,12 +81,24 @@ const saveMessage = async (req, res) => {
 
   await chat.save();
   
+  chat.users.forEach(userId => {
+    if (userId.toString() !== req.body.senderId) {
+      chat.unreadMessages.set(userId.toString(), true);
+    }
+  });
+  await chat.save();
+  
   res.status(201).json(newMessage);
 }
 
 
 const createChat = async (req, res) => {
   const { users, name, isGroupChat } = req.body;
+
+  const unreadMessages = users.reduce((acc, userId) => {
+    acc[userId.toString()] = false;
+    return acc;
+  }, {});
 
   // Check if a non-group chat already exists between these users
   if (!isGroupChat) {
@@ -106,7 +118,8 @@ const createChat = async (req, res) => {
     admin: users[0],
     messages: [],
     isGroupChat,
-    pendingApprovals: isGroupChat ? users.slice(1) : []
+    pendingApprovals: isGroupChat ? users.slice(1) : [],
+    unreadMessages
   });
 
   res.status(201).json(chat);
@@ -195,4 +208,21 @@ messageChangeStream.on('change', async (change) => {
   });
 });
 
-export { getMessages, saveMessage, getChats, createChat, updateGroupChat, approveGroupChatRequest };
+const markChatAsRead = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.chatId);
+    if (!chat) {
+      return res.status(404).json({ message: 'Chat not found' });
+    }
+
+    chat.unreadMessages.set(req.body.userId, false);
+    await chat.save();
+
+    res.status(200).json({ message: 'Chat marked as read' });
+  } catch (error) {
+    console.error('Error marking chat as read:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export { getMessages, saveMessage, getChats, createChat, updateGroupChat, approveGroupChatRequest, markChatAsRead };

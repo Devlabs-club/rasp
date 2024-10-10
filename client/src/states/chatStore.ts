@@ -27,6 +27,7 @@ interface Chat {
   pendingApprovals: string[];
   lastMessage: LastMessage | null;
   otherUserName: string;
+  unreadMessages: { [key: string]: boolean };
 }
 
 interface ChatState {
@@ -76,9 +77,11 @@ const useChatStore = create<ChatState>((set, get) => ({
         `http://localhost:5000/chat/get/${chatId}?page=${page}&limit=${limit}`
       );
       set(state => {
-        const newMessages = [...(state.messageCache.get(chatId) || []), ...response.data];
-        state.messageCache.set(chatId, newMessages);
-        state.messages = page === 1 ? response.data : [...state.messages, ...response.data];
+        const newMessages = response.data;
+        const existingMessages = state.messageCache.get(chatId) || [];
+        const updatedMessages = page === 1 ? newMessages : [...existingMessages, ...newMessages];
+        state.messageCache.set(chatId, updatedMessages);
+        state.messages = updatedMessages;
         return state;
       });
     } catch (error) {
@@ -102,6 +105,10 @@ const useChatStore = create<ChatState>((set, get) => ({
             senderName: 'You',
             senderId: senderId
           };
+          updatedChat.unreadMessages = updatedChat.users.reduce((acc, userId) => {
+            acc[userId] = userId !== senderId;
+            return acc;
+          }, {} as { [key: string]: boolean });
           updateChat(updatedChat);
         }
       }
@@ -113,10 +120,17 @@ const useChatStore = create<ChatState>((set, get) => ({
     try {
       const response = await axios.post<Chat>('http://localhost:5000/chat/create', { users, name, isGroupChat });
       if (response.status === 201 || response.status === 200) {
+        const newChat = {
+          ...response.data,
+          unreadMessages: users.reduce((acc, userId) => {
+            acc[userId] = false;
+            return acc;
+          }, {} as { [key: string]: boolean })
+        };
         set(state => ({
-          chats: [response.data, ...state.chats]
+          chats: [newChat, ...state.chats]
         }));
-        return response.data._id;
+        return newChat._id;
       }
     } catch (error) {
       console.error('Error creating/getting chat:', error);
@@ -131,21 +145,27 @@ const useChatStore = create<ChatState>((set, get) => ({
     set(state => {
       const chatMessages = state.messageCache.get(chatId) || [];
       state.messageCache.set(chatId, [...chatMessages, message]);
-      console.log(state);
       return state;
     });
   },
   updateChat: (updatedChat: Chat) => set((state) => {
-    const updatedChats = state.chats.map(chat => 
-      chat._id === updatedChat._id ? {
+    let updatedChats = state.chats;
+    if (!state.chats.find(chat => chat._id === updatedChat._id)) {
+      updatedChats = [...state.chats, updatedChat];
+    }
+    else {
+      updatedChats = state.chats.map(chat => 
+        chat._id === updatedChat._id ? {
         ...chat,
         ...updatedChat,
         lastMessage: updatedChat.lastMessage ? {
           ...updatedChat.lastMessage
         } : null,
-        otherUserName: chat.otherUserName // Preserve the existing otherUserName
+        otherUserName: chat.otherUserName, // Preserve the existing otherUserName
+        unreadMessages: updatedChat.unreadMessages || chat.unreadMessages // Use the updated unreadMessages or keep the existing ones
       } : chat
-    );
+      );
+    }
 
     // Sort the chats
     updatedChats.sort((a, b) => {
