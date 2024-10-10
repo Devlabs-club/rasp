@@ -3,11 +3,11 @@ import Chat from "../chat/Chat";
 import { UserContext } from "../../pages/Dashboard";
 
 interface ChatMessage {
-    sender: string; // User ID or Name
-    receiver: string; // User ID or Name
+    sender: string; 
+    receiver: string; 
     content: string;
     timestamp: Date;
-    date: Date; // For displaying date stamps
+    date: Date; 
 }
 
 const ChatPage: React.FC = () => {
@@ -16,14 +16,8 @@ const ChatPage: React.FC = () => {
     const [selectedChat, setSelectedChat] = useState<ChatMessage[]>([]);
     const [currentChatUser, setCurrentChatUser] = useState<string | null>(null);
 
-    // Sample data for past chats
     useEffect(() => {
         // Replace with actual API call to fetch past chats
-        setPastChats([
-            { sender: "Alice", receiver: "Bob", content: "Hey!", timestamp: new Date(), date: new Date() },
-            { sender: "Bob", receiver: "Alice", content: "Hi!", timestamp: new Date(), date: new Date() },
-            // Add more sample chats here...
-        ]);
     }, []);
 
     const handleChatSelect = (chat: ChatMessage) => {
@@ -63,7 +57,7 @@ const ChatPage: React.FC = () => {
                         <>
                             <div className="flex-1 overflow-y-auto">
                                 {selectedChat.map((message, index) => {
-                                    const isSender = message.sender === user?.name; // Assuming `user.name` gives the current user's name
+                                    const isSender = message.sender === user?.name; 
                                     return (
                                         <div key={index} className={`flex ${isSender ? "justify-end" : "justify-start"} mb-4`}>
                                             <div
@@ -80,7 +74,7 @@ const ChatPage: React.FC = () => {
                             </div>
 
                             <div className="mt-4 text-gray-500">
-                                {formatDate(selectedChat[0].date)} {/* Display date stamp */}
+                                {formatDate(selectedChat[0].date)}
                             </div>
 
                             {/* Chat input component goes here */}

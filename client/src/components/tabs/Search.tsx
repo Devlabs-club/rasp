@@ -1,5 +1,3 @@
-// src/components/tabs/Search.tsx
-
 import axios from "axios";
 import { useState, FormEvent, ChangeEvent, useContext } from "react";
 import UserCard from "../user/UserCard";
@@ -71,6 +69,24 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
     }
   };
 
+  // Function to calculate the remaining time in days or hours
+  const calculateRemainingTime = (expirationDate: string) => {
+    const now = new Date();
+    const expiration = new Date(expirationDate);
+    const timeDiff = expiration.getTime() - now.getTime();
+    
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+    if (days > 0) {
+      return `${days} day(s)`;
+    } else if (hours > 0) {
+      return `${hours} hour(s)`;
+    } else {
+      return "Expired";
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 gap-20">
       <div className="flex flex-col gap-12">
@@ -89,21 +105,45 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setChatReceiver }) => {
           </button>
         </form>
 
-        <form>
-          <Input label="Status" name="content" placeholder="What's on your mind?" value={status.content} setValue={(value) => {
-            setStatus(prevStatus => ({ ...prevStatus, content: value }));
-          }} />
-          {user?.about?.status?.content ? 
-          <div>
-            <p>Status expires at: {new Date(user?.about.status?.expirationDate).toLocaleString()}</p>
+        {/* Status Input and Duration Dropdown Side-by-Side */}
+        <form className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-72"> {/* Apply width here */}
+              <Input 
+                label="Status" 
+                name="content" 
+                placeholder="What's on your mind?" 
+                value={status.content} 
+                setValue={(value) => {
+                  setStatus(prevStatus => ({ ...prevStatus, content: value }));
+                }} 
+              />
+            </div>
+            <div className="w-30"> {/* Apply width here */}
+              <SelectInput 
+                label="Duration" 
+                name="duration" 
+                options={["24h", "48h", "1w"]} 
+                value={status.duration} 
+                setValue={(value) => {
+                  setStatus(prevStatus => ({ ...prevStatus, duration: value }));
+                }} 
+              />
+            </div>
           </div>
-          : 
-          <></>}
-          <SelectInput label="Status Duration" name="duration" options={["24h", "48h", "1w"]} value={status.duration} setValue={(value) => {
-            setStatus(prevStatus => ({ ...prevStatus, duration: value }));
-          }} />
-          <SubmitButton onClick={setUserStatus} />
+          <div className="mt-9">
+            <SubmitButton onClick={setUserStatus} />
+          </div>
+
         </form>
+        
+        {user?.about?.status?.content && user?.about?.status?.expirationDate ? (
+          <div>
+            <p>
+              Status expires in {calculateRemainingTime(user.about.status.expirationDate)}
+            </p>
+          </div>
+        ) : null}
 
         <ul className="flex gap-4">
           {response.map((user, index) => (

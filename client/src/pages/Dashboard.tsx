@@ -12,6 +12,8 @@ import EditProfile from "../components/tabs/EditProfile";
 import Search from "../components/tabs/Search";
 import ChatPage from "../components/tabs/ChatPage";
 import Navbar from "../components/NavBar";
+import { UserCardInfo } from "../components/user/UserCard";
+import Community from "../components/tabs/Community";
 
 const UserContext = createContext<any>(null);
 const SocketContext = createContext<any>(null);
@@ -20,7 +22,8 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [cookies, , removeCookie] = useCookies(['token']);
   const [user, setUser] = useState<any>(null);
-  const [currentTab, setCurrentTab] = useState("search"); // State to track current tab
+  const [currentTab, setCurrentTab] = useState("search"); 
+  const [chatReceiver, setChatReceiver] = useState<UserCardInfo | null>(null);
 
   const socket = useRef<any>(null);
 
@@ -73,12 +76,26 @@ const Dashboard: React.FC = () => {
           <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
           <div className="container mx-auto flex flex-col gap-16 py-24 w-full">
             {user ? (
-              currentTab === "editProfile" ? <EditProfile /> :
-              currentTab === "search" ? <Search setCurrentTab={setCurrentTab} /> : // Pass the setCurrentTab prop here
-              currentTab === "chat" ? <ChatPage /> : 
-              <EditProfile />
+              currentTab === "editProfile" ? (
+                <EditProfile />
+              ) : currentTab === "search" ? (
+                <Search 
+                  setCurrentTab={setCurrentTab} 
+                  setChatReceiver={(receiver: UserCardInfo | null) => {
+                    setChatReceiver(receiver); // Set the selected chat receiver
+                    setCurrentTab("chat"); // Switch to chat tab
+                  }} 
+                />
+              ) : currentTab === "chat" ? (
+                <ChatPage /> // Pass the chatReceiver to ChatPage
+              ) : (
+                <Community />
+              )
             ) : null}
-            <button onClick={Logout} className="text-white flex gap-2 justify-center items-center px-4 py-2 rounded-md font-medium transition-all duration-200 hover:-translate-y-0.5 bg-red-500 w-fit">
+            <button 
+              onClick={Logout} 
+              className="text-white flex gap-2 justify-center items-center px-4 py-2 rounded-md font-medium transition-all duration-200 hover:-translate-y-0.5 bg-red-500 w-fit"
+            >
               Logout
             </button>
           </div>

@@ -19,7 +19,7 @@ const SelectInput: React.FC<SelectInputProps> = ({ label, name, options, value, 
         name={name}
         className="bg-neutral-800 p-3 text-neutral-200 rounded-md"
       >
-        <option value="" className='bg-neutral-900 text-gray-400'>-- select an option --</option>
+        <option value="" className='bg-neutral-900 text-gray-400'>-- select --</option>
         {options.map((option, index) => 
           <option key={index} value={option} className='bg-neutral-900'>{option}</option>
         )}

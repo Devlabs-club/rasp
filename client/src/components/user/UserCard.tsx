@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface UserCardInfo {
+export interface UserCardInfo {
   email: string;
   name: string;
   photo: any;
