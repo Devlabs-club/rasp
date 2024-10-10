@@ -31,7 +31,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const verifyCookie = async () => {
-      console.log(cookies.token);
+      console.log(cookies);
       if (!cookies.token || cookies.token === "undefined") {
         navigate("/signin");
         return;
