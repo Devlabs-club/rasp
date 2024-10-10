@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 import io, { Socket } from 'socket.io-client';
-import useChatStore, { ChatMessage } from './chatStore';
-import useUserStore from './userStore';
 
 interface SocketState {
   socket: Socket | null;
@@ -16,16 +14,6 @@ const useSocketStore = create<SocketState>((set) => ({
       query: { userId }
     });
     set({ socket: newSocket });
-
-    newSocket.on('message', (newMessage: ChatMessage) => {
-      const chatStore = useChatStore.getState();
-      chatStore.addMessageToCache(newMessage.chat, newMessage);
-      
-      // Check if the current chat is the one receiving the message
-      if (newMessage.chat === chatStore.currentChatId) {
-        chatStore.setMessages([...chatStore.messages, newMessage]);
-      }
-    });
   },
   disconnectSocket: () => {
     set((state) => {

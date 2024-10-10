@@ -5,6 +5,7 @@ import { LRUCache } from 'lru-cache';
 interface ChatMessage {
   _id: string;
   sender: string;
+  senderName: string;
   chat: string;
   content: string;
   timestamp: Date;
@@ -112,6 +113,9 @@ const useChatStore = create<ChatState>((set, get) => ({
     try {
       const response = await axios.post<Chat>('http://localhost:5000/chat/create', { users, name, isGroupChat });
       if (response.status === 201 || response.status === 200) {
+        set(state => ({
+          chats: [response.data, ...state.chats]
+        }));
         return response.data._id;
       }
     } catch (error) {

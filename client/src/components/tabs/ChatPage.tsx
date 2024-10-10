@@ -21,7 +21,8 @@ const ChatPage: React.FC = () => {
         getChats, 
         getMessages, 
         saveMessage,
-        updateChat
+        updateChat,
+        addMessageToCache
     } = useChatStore();
 
     const { socket } = useSocketStore();
@@ -56,7 +57,8 @@ const ChatPage: React.FC = () => {
 
     useEffect(() => {
         socket?.on('message', (newMessage: ChatMessage) => {
-            console.log(newMessage);
+            // Add message to cache
+            addMessageToCache(newMessage.chat, newMessage);
             
             if(newMessage.chat === currentChatId) {
                 setMessages([...messages, newMessage]);
@@ -75,7 +77,11 @@ const ChatPage: React.FC = () => {
                 updateChat(updatedChat);
             }
         });
-    }, [socket, messages, setMessages, currentChatId, chats, updateChat, user._id, user.name]);
+
+        return () => {
+            socket?.off('message');
+        };
+    }, [socket, messages, setMessages, currentChatId, chats, updateChat, user._id, user.name, addMessageToCache]);
 
     useEffect(() => {
         socket?.on('chat', (updatedChat: Chat) => {
@@ -103,14 +109,14 @@ const ChatPage: React.FC = () => {
         }
     }, [currentChatId, getMessages, isLoading, page]);
 
-    const getCurrentChat = useCallback(() => {
-        const chat = chats.find(chat => chat._id === currentChatId);
-        if (chat && !chat.isGroupChat) {
-            // const otherUserId = chat.users.find(userId => userId !== user._id);
-            chat.otherUserName = chats.find(c => c._id === chat._id)?.otherUserName || 'Unknown';
-        }
-        return chat;
-    }, [chats, currentChatId]);
+    // const getCurrentChat = useCallback(() => {
+    //     const chat = chats.find(chat => chat._id === currentChatId);
+    //     if (chat && !chat.isGroupChat) {
+    //         // const otherUserId = chat.users.find(userId => userId !== user._id);
+    //         chat.otherUserName = chats.find(c => c._id === chat._id)?.otherUserName || 'Unknown';
+    //     }
+    //     return chat;
+    // }, [chats, currentChatId]);
 
     return (
         <div className="flex h-full">
@@ -147,14 +153,13 @@ const ChatPage: React.FC = () => {
                             <div className="mt-auto flex flex-col gap-2">
                                 {messages.map((message, index) => {
                                     const isSender = message.sender === user?._id;
-                                    const senderName = isSender ? "You" : getCurrentChat()?.otherUserName || 'Unknown';
                                     return (
                                         <Message 
                                             key={index} 
                                             content={message.content} 
                                             timestamp={message.timestamp} 
                                             isSender={isSender}
-                                            senderName={senderName}
+                                            senderName={message.senderName}
                                         />
                                     );
                                 })}

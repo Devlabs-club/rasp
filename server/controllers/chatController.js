@@ -4,7 +4,10 @@ import { User } from '../models/userModel.js';
 import { emitToConnectedClient, publish } from '../utils/connectedClients.js';
 
 const getChats = async (req, res) => {
-  const chatDocuments = await Chat.find({ users: { $all: [req.params.userId] } });
+  const chatDocuments = await Chat.find({ 
+    users: { $all: [req.params.userId] },
+    'messages.0': { $exists: true }  // This ensures at least one message exists
+  });
   const chats = [];
   for (const chat of chatDocuments) {
     const otherUser = await User.findById(chat.users.find(userId => userId != req.params.userId));
@@ -61,6 +64,7 @@ const saveMessage = async (req, res) => {
 
   const newMessage = await Message.create({
     sender: req.body.senderId,
+    senderName: sender.name,
     chat: req.params.chatId,
     content: req.body.message,
     timestamp: Date.now()
@@ -79,6 +83,7 @@ const saveMessage = async (req, res) => {
   
   res.status(201).json(newMessage);
 }
+
 
 const createChat = async (req, res) => {
   const { users, name, isGroupChat } = req.body;
@@ -132,6 +137,7 @@ const updateGroupChat = async (req, res) => {
 
   res.status(200).json(chat);
 }
+
 
 const approveGroupChatRequest = async (req, res) => {
   const { chatId, userId } = req.body;

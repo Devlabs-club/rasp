@@ -38,8 +38,10 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
 
   const openChat = async (receiverId: string) => {
     const chatId = await createChat([user._id, receiverId]);
-    setCurrentChatId(chatId);
-    setCurrentTab("chat");
+    if (chatId) {
+      setCurrentChatId(chatId);
+      setCurrentTab("chat");
+    }
   };
 
   const setUserStatus = async (e: React.FormEvent) => {
