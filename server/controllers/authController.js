@@ -20,13 +20,9 @@ const googleAuth = async (req, res, next) => {
     if (!user) {
       user = await User.create({ name, email, googleId: sub, photo: picture });
     }
-
-    console.log(tokens.id_token);
     
     res.cookie("token", tokens.id_token, {
-      withCredentials: true,
-      httpOnly: false,
-      sameSite: "none",
+      httpOnly: true,
     });
 
     res

@@ -2,7 +2,7 @@ import axios from "axios";
 import React, { useEffect, useCallback, useState } from "react";
 import { googleLogout } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
-import { useCookies } from "react-cookie";
+import getCookie from "../utils/getCookie";
 
 import EditProfile from "../components/tabs/EditProfile";
 import Search from "../components/tabs/Search";
@@ -16,7 +16,6 @@ import useSocketStore from '../states/socketStore';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  const [cookies, , removeCookie] = useCookies(['token']);
   const { user, setUser } = useUserStore();
   const { setCurrentChatId } = useChatStore();
   const [currentTab, setCurrentTab] = useState("search");
@@ -26,14 +25,14 @@ const Dashboard: React.FC = () => {
   const Logout = useCallback(() => {
     setUser(null);
     googleLogout();
-    removeCookie("token");
     navigate("/signin");
-  }, [navigate, setUser, removeCookie]);
+  }, [navigate, setUser]);
 
   useEffect(() => {
     const verifyCookie = async () => {
-      console.log(cookies);
-      if (!cookies.token || cookies.token === "undefined") {
+      const token = getCookie('token');
+      console.log(token);
+      if (!token || token === "undefined") {
         navigate("/signin");
         return;
       }
@@ -57,7 +56,7 @@ const Dashboard: React.FC = () => {
       }
     };
     verifyCookie(); 
-  }, [cookies, navigate, Logout, setUser, connectSocket, disconnectSocket]);
+  }, [navigate, Logout, setUser, connectSocket, disconnectSocket]);
 
   return (
         <section className="flex">

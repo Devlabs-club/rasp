@@ -1,12 +1,13 @@
 import axios from 'axios';
 import { useGoogleLogin } from "@react-oauth/google";
 import { useEffect } from 'react';
-import { useCookies } from 'react-cookie';
 import { useNavigate } from "react-router-dom";
 
 import { FaGoogle } from "react-icons/fa";
 
 import HeadingBig from '../components/text/HeadingBig';
+
+import getCookie from '../utils/getCookie';
 
 interface GoogleAuthResponse {
     code: string;
@@ -19,13 +20,13 @@ interface AuthResponse {
 
 const Signin: React.FC = () => {
     const navigate = useNavigate();
-    const [cookies] = useCookies(['token']);
     
     useEffect(() => {
-        if (cookies.token && cookies.token !== "undefined") {
+        const token = getCookie('token');
+        if (token && token !== "undefined") {
             navigate("/");
         }
-    }, [cookies, navigate]);
+    }, [navigate]);
 
     const handleGoogleAuth = async ({ code }: GoogleAuthResponse) => {   
         try {
