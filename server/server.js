@@ -26,6 +26,7 @@ app.use(cors({
   origin: ['http://localhost:3000', 'https://rasp-nu.vercel.app'],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
+  exposedHeaders: ["Set-Cookie", "Content-Length"],
 }));
 app.use(cookieParser());
 app.use(express.json({limit: '50mb'}));

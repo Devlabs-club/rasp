@@ -21,6 +21,7 @@ const googleAuth = async (req, res, next) => {
       user = await User.create({ name, email, googleId: sub, photo: picture });
     }
     
+    res.set("Access-Control-Expose-Headers", "Set-Cookie");
     res.cookie("token", tokens.id_token, {
       withCredentials: true,
       path: "/",
