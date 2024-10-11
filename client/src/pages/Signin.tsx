@@ -18,6 +18,14 @@ interface AuthResponse {
     message: string;
 }
 
+const api = axios.create({
+    baseURL: "https://rasp-api.vercel.app",
+    withCredentials: true,
+    headers: {
+        "Content-Type": "application/json",
+    }
+});
+
 const Signin: React.FC = () => {
     const navigate = useNavigate();
     
@@ -30,7 +38,7 @@ const Signin: React.FC = () => {
 
     const handleGoogleAuth = async ({ code }: GoogleAuthResponse) => {   
         try {
-            const { data } = await axios.post<AuthResponse>(`${process.env.REACT_APP_SERVER_URL}/auth/google`, { code }, { withCredentials: true });
+            const { data } = await api.post<AuthResponse>(`${process.env.REACT_APP_SERVER_URL}/auth/google`, { code }, { withCredentials: true });
     
             const { success, message } = data;
             if (success) {

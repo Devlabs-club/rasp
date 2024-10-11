@@ -24,7 +24,7 @@ const googleAuth = async (req, res, next) => {
     res.set("Access-Control-Expose-Headers", "Set-Cookie");
     res.cookie("token", tokens.id_token, {
       withCredentials: true,
-      path: "/",
+      path: "./",
       maxAge: 1000 * 60 * 60 * 24 * 7,
       httpOnly: true,
       sameSite: "none",
