@@ -11,7 +11,7 @@ const useSocketStore = create<SocketState>((set) => ({
   socket: null,
   connectSocket: (userId: string) => {
     const newSocket = io(`${process.env.REACT_APP_SERVER_URL}`, {
-      query: { userId }, transports: ['websocket'] 
+      query: { userId }, autoConnect: false 
     });
     set({ socket: newSocket });
   },

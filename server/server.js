@@ -23,7 +23,7 @@ const app = express();
 const server = createServer(app);
 
 app.use(cors({
-  origin: 'https://rasp-nu.vercel.app',
+  origin: process.env.CLIENT_URL,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 }));
