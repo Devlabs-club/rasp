@@ -23,6 +23,8 @@ const googleAuth = async (req, res, next) => {
     
     res.cookie("token", tokens.id_token, {
       httpOnly: true,
+      sameSite: "none",
+      secure: true,
     });
 
     res
