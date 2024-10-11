@@ -1,19 +1,16 @@
-import React, { useContext } from 'react';
 import { AiOutlineMessage } from "react-icons/ai";
-import { UserContext } from '../../pages/Dashboard';
 
 interface SelectedUserCardProps {
   selectedUser: any;
-  openChat: (sender: any, receiver: any) => void;
+  openChat: (receiverId: string) => void;
 }
 
 const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openChat }) => {
-  const user = useContext(UserContext);
   return (
     <div className={`w-[500px] border border-gray-600 sticky top-10 right-0`}>
       <div className="bg-gradient-to-br from-orange-300/100 to-orange-400/100">
         <img
-          src={selectedUser.photo.startsWith("http") ? selectedUser.photo : atob(selectedUser.photo.replace(/^data:image\/(png|jpeg|jpg);base64,/, ''))}
+          src={selectedUser.photo}
           alt={selectedUser.name}
           className="w-full aspect-video object-cover border border-gray-600 mix-blend-multiply"
         />
@@ -69,13 +66,13 @@ const SelectedUserCard: React.FC<SelectedUserCardProps> = ({ selectedUser, openC
           <div className="text-neutral-200 flex flex-wrap gap-2">
             {selectedUser.about.socials.map((value: string, index: number) => (
               <a href={value} className="text-neutral-300 px-2 py-1 text-sm rounded-md bg-neutral-700" key={index}>
-                {value.split('/')[2].split('.')[0]}
+                {value.startsWith("http") ? value.split('/')[2].split('.')[0] : value.split('.')[0]}
               </a>
             ))}
           </div>
         </div>
 
-        <button className="px-4 py-2 w-fit bg-gradient-to-br from-orange-400 to-orange-600 text-lg text-white mx-3 my-4 flex gap-2 items-center" onClick={() => openChat(user, selectedUser)}>
+        <button className="px-4 py-2 w-fit bg-gradient-to-br from-orange-400 to-orange-600 text-lg text-white mx-3 my-4 flex gap-2 items-center" onClick={() => openChat(selectedUser._id)}>
           Chat <AiOutlineMessage size="1rem" />
         </button>
       </div>

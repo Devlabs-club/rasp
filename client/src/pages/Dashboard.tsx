@@ -1,62 +1,52 @@
-// src/pages/Dashboard.tsx
-
 import axios from "axios";
+import React, { useEffect, useCallback, useState } from "react";
 import { googleLogout } from "@react-oauth/google";
-import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
-import { createContext } from "react";
-import io from "socket.io-client";
 
 import EditProfile from "../components/tabs/EditProfile";
 import Search from "../components/tabs/Search";
 import ChatPage from "../components/tabs/ChatPage";
 import Navbar from "../components/NavBar";
-import { UserCardInfo } from "../components/user/UserCard";
 import Community from "../components/tabs/Community";
 
-const UserContext = createContext<any>(null);
-const SocketContext = createContext<any>(null);
+import useUserStore from '../states/userStore';
+import useChatStore from '../states/chatStore';
+import useSocketStore from '../states/socketStore';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [cookies, , removeCookie] = useCookies(['token']);
-  const [user, setUser] = useState<any>(null);
-  const [currentTab, setCurrentTab] = useState("search"); 
-  const [chatReceiver, setChatReceiver] = useState<UserCardInfo | null>(null);
+  const { user, setUser } = useUserStore();
+  const { setCurrentChatId } = useChatStore();
+  const [currentTab, setCurrentTab] = useState("search");
 
-  const socket = useRef<any>(null);
+  const { connectSocket, disconnectSocket } = useSocketStore();
 
   const Logout = useCallback(() => {
     setUser(null);
     googleLogout();
     removeCookie("token");
     navigate("/signin");
-  }, [navigate, removeCookie]);
+  }, [navigate, setUser, removeCookie]);
 
   useEffect(() => {
     const verifyCookie = async () => {
+      console.log(cookies);
       if (!cookies.token || cookies.token === "undefined") {
         navigate("/signin");
         return;
       }
-      try {
-        const { data } = await axios.post("http://localhost:5000", {}, { withCredentials: true });
+      try { 
+        const { data } = await axios.post(`${process.env.REACT_APP_SERVER_URL}`, {}, { withCredentials: true });
         const { status, user } = data;
         
         if (status) {
           setUser(user);
+          connectSocket(user._id);
           
-          socket.current = io("http://localhost:5000", {
-            query: { userId: user._id }
-          });
-
-          socket.current?.on("user-update", async (updatedUser: any) => {
-            setUser(updatedUser);    
-          });
-        
           return () => {
-            socket.current?.disconnect();
+            disconnectSocket();
           }
         } else {
           Logout();
@@ -67,13 +57,11 @@ const Dashboard: React.FC = () => {
       }
     };
     verifyCookie(); 
-  }, [cookies, navigate, Logout]);
+  }, [cookies, navigate, Logout, setUser, connectSocket, disconnectSocket]);
 
   return (
-    <SocketContext.Provider value={socket}>
-      <UserContext.Provider value={user}>
         <section className="flex">
-          <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+          <Navbar Logout={Logout} currentTab={currentTab} setCurrentTab={setCurrentTab} />
           <div className="container mx-auto flex flex-col gap-16 py-24 w-full">
             {user ? (
               currentTab === "editProfile" ? (
@@ -81,10 +69,7 @@ const Dashboard: React.FC = () => {
               ) : currentTab === "search" ? (
                 <Search 
                   setCurrentTab={setCurrentTab} 
-                  setChatReceiver={(receiver: UserCardInfo | null) => {
-                    setChatReceiver(receiver); // Set the selected chat receiver
-                    setCurrentTab("chat"); // Switch to chat tab
-                  }} 
+                  setCurrentChatId={setCurrentChatId}
                 />
               ) : currentTab === "chat" ? (
                 <ChatPage /> // Pass the chatReceiver to ChatPage
@@ -100,10 +85,7 @@ const Dashboard: React.FC = () => {
             </button>
           </div>
         </section>
-      </UserContext.Provider>
-    </SocketContext.Provider>
   );
 }
 
-export { UserContext, SocketContext };
 export default Dashboard;

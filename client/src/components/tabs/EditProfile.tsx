@@ -1,17 +1,17 @@
 import axios from "axios";
-import { useState, FormEvent, useContext } from "react";
-import { UserContext } from "../../pages/Dashboard";
+import { useState, FormEvent } from "react";
+import useUserStore from "../../states/userStore";
 
 import Input from "../inputs/Input";
 import ArrayInput from "../inputs/ArrayInput";
 import SelectInput from "../inputs/SelectInput";
 import TextBox from "../inputs/TextBox";
-// import ProjectInput from "../inputs/ProjectInput";
-// import ExperienceInput from "../inputs/ExperienceInput";
 import SubmitButton from "../inputs/SubmitButton";
 import Heading from "../text/Heading";
 import EditUserCard from "../user/EditUserCard";
 import ProfilePictureInput from "../inputs/ProfilePictureInput";
+
+import isToxic from "../../utils/isToxic";
 
 const defaultUser: any = {
     name: "",
@@ -37,7 +37,7 @@ const defaultUser: any = {
 }
 
 const UserProfile = () => {
-    const user = useContext(UserContext);
+    const { user } = useUserStore();
 
     const [userData, setUserData] = useState<any>({
         ...defaultUser,
@@ -47,8 +47,29 @@ const UserProfile = () => {
     const saveUser = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await axios.patch("http://localhost:5000/user/save", { user: { ...user, ...userData } });
-        console.log(response);
+        const textToCheck = `
+            ${userData.name}
+
+            ${userData.about.bio}
+
+            ${userData.about.skills.join(" ")}
+
+            ${userData.about.hobbies.join(" ")}
+
+            ${userData.about.major}
+
+            ${userData.about.socials.join(" ")}
+        `
+
+        if (await isToxic(textToCheck)) {
+            alert("Your profile contains inappropriate content. Please remove it before saving.");
+            return;
+        };
+
+        const response = await axios.patch(`${process.env.REACT_APP_SERVER_URL}/user/save`, { user: { ...user, ...userData } });
+        if (response.status === 201) {
+            alert("User saved successfully");
+        }    
     };
 
     return (
@@ -58,7 +79,7 @@ const UserProfile = () => {
 
                 <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-6 col-span-1">
                     <ProfilePictureInput label="Upload your profile picture" name="pfp" setPhoto={(photo: any) => {
-                        setUserData((userData: any) => ({ ...userData, photo: btoa(photo) }));
+                        setUserData((userData: any) => ({ ...userData, photo }));
                     }} />
                     
                     <Input
@@ -69,6 +90,7 @@ const UserProfile = () => {
                         setValue={(value: string) => {
                             setUserData((userData: any) => ({ ...userData, name: value }));
                         }}
+                        maxLength={40}
                     />
                     <SelectInput
                         label="your gender"
@@ -105,6 +127,7 @@ const UserProfile = () => {
                         setValue={(value: string) => {
                             setUserData((userData: any) => ({ ...userData, about: { ...userData.about, major: value } }));
                         }}
+                        maxLength={50}
                     />
                     <ArrayInput
                         label="your skills"
@@ -112,6 +135,8 @@ const UserProfile = () => {
                         placeholder="e.g. running, business, etc."
                         items={userData.about.skills}
                         setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, skills: items } }))}
+                        maxLength={20}
+                        maxItems={10}
                     />
                     <ArrayInput
                         label="your hobbies"
@@ -119,13 +144,17 @@ const UserProfile = () => {
                         placeholder="e.g. ping-pong, shrimping, etc."
                         items={userData.about.hobbies}
                         setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, hobbies: items } }))}
+                        maxLength={30}
+                        maxItems={10}
                     />
                     <ArrayInput
-                        label="your socials"
+                        label="your socials (must start with http/https)"
                         name="socials"
-                        placeholder="e.g. instagram, github, etc."
+                        placeholder="e.g. linkedin, github, etc."
                         items={userData.about.socials}
-                        setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, socials: items } }))}
+                        setItems={(items: string[]) => setUserData((userData: any) => ({ ...userData, about: { ...userData.about, socials: items.filter(item => item.startsWith("http")) } }))}
+                        maxLength={100}
+                        maxItems={5}
                     />
                     <TextBox
                         label="anything else about you"
@@ -133,6 +162,7 @@ const UserProfile = () => {
                         placeholder="i lived a simple life, experienced so much, and then..."
                         value={userData.about.bio}
                         setValue={(value: string) => setUserData({ ...userData, about: { ...userData.about, bio: value } })}
+                        maxLength={500}
                     />
                     
                     <SubmitButton onClick={saveUser} />

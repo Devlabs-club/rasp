@@ -6,11 +6,15 @@ interface TextBoxProps {
   placeholder: string;
   value: string;
   setValue: (value: string) => void;
+  maxLength?: number;
 }
 
-const TextBox: React.FC<TextBoxProps> = ({ label, name, placeholder, value, setValue }) => {
+const TextBox: React.FC<TextBoxProps> = ({ label, name, placeholder, value, setValue, maxLength }) => {
   const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setValue(e.target.value);
+    const newValue = e.target.value;
+    if (maxLength === undefined || newValue.length <= maxLength) {
+      setValue(newValue);
+    }
   };
 
   return (
@@ -23,6 +27,7 @@ const TextBox: React.FC<TextBoxProps> = ({ label, name, placeholder, value, setV
         placeholder={placeholder}
         value={value}
         onChange={handleChange}
+        maxLength={maxLength}
         className="bg-neutral-800 p-3 text-neutral-200 h-32 resize-none rounded-md"
       />
     </div>
