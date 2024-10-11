@@ -23,9 +23,7 @@ const app = express();
 const server = createServer(app);
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? [process.env.CLIENT_URL]
-    : ['http://localhost:3000', 'https://rasp-nu.vercel.app'],
+  origin: ['http://localhost:3000', 'https://rasp-nu.vercel.app'],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 }));
