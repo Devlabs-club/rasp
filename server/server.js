@@ -23,12 +23,13 @@ const app = express();
 const server = createServer(app);
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://rasp-nu.vercel.app'],
+  origin: 'https://rasp-nu.vercel.app',
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true,
 }));
 app.use(cookieParser());
 app.use(express.json({limit: '50mb'}));
+app.options('*', cors());
 
 app.post('/', userVerification);
 app.use("/auth", authRouter);
