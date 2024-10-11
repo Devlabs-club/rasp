@@ -77,12 +77,6 @@ const Dashboard: React.FC = () => {
                 <Community />
               )
             ) : null}
-            <button 
-              onClick={Logout} 
-              className="text-white flex gap-2 justify-center items-center px-4 py-2 rounded-md font-medium transition-all duration-200 hover:-translate-y-0.5 bg-red-500 w-fit"
-            >
-              Logout
-            </button>
           </div>
         </section>
   );

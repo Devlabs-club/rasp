@@ -57,12 +57,12 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
       return;
     }
 
-    if (await isToxic(status.content)) {
+    if (await isToxic(status?.content)) {
       alert("Your status contains inappropriate content. Please remove it before saving.");
       return;
     }
 
-    await updateUserStatus(user?._id, status.content, status.duration);
+    await updateUserStatus(user?._id, status?.content, status.duration);
   }
 
   // Function to calculate the remaining time in days or hours
@@ -119,7 +119,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
                 label="Status" 
                 name="content" 
                 placeholder="What's on your mind?" 
-                value={status.content} 
+                value={status?.content} 
                 setValue={(value) => {
                   setStatus(({ ...status, content: value }));
                 }} 
@@ -131,7 +131,7 @@ const Search: React.FC<SearchProps> = ({ setCurrentTab, setCurrentChatId }) => {
                 label="Duration" 
                 name="duration" 
                 options={["24h", "48h", "1w"]} 
-                value={status.duration} 
+                value={status?.duration} 
                 setValue={(value) => {
                   setStatus({ ...status, duration: value });
                 }} 

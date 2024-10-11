@@ -1,13 +1,12 @@
 // src/components/tabs/Community.tsx
 
 import axios from "axios";
-import { useState, useEffect, FormEvent, useContext } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import Heading from "../text/Heading";
 import Input from "../inputs/Input";
 import SelectInput from "../inputs/SelectInput";
 import SubmitButton from "../inputs/SubmitButton";
-import { UserContext } from "../../pages/Dashboard";
-
+import useUserStore from "../../states/userStore";
 interface Status {
   content: string;
   duration: string;
@@ -28,7 +27,7 @@ interface UserStatus {
 }
 
 const Community: React.FC = () => {
-  const user = useContext(UserContext);
+  const { user } = useUserStore();
   const [status, setStatus] = useState<Status>({
     content: user?.about?.status?.content || "",
     duration: "",
