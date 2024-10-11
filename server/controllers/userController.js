@@ -119,19 +119,19 @@ const slidingWindowChunking = (text, windowSize = 100, stepSize = 50) => {
 };
 
 const searchUser = async (req, res, next) => {
-  const userId = req.body.user._id || uuidv4();
-  const now = Date.now();
-  const lastRequestTime = userCooldowns.get(userId) || 0;
+  // const userId = req.body.user._id || uuidv4();
+  // const now = Date.now();
+  // const lastRequestTime = userCooldowns.get(userId) || 0;
 
-  if (now - lastRequestTime < COOLDOWN_DURATION) {
-    const remainingCooldown = COOLDOWN_DURATION - (now - lastRequestTime);
-    return res.status(429).json({ 
-      error: 'Please wait before making another request.',
-      remainingCooldown
-    });
-  }
+  // if (now - lastRequestTime < COOLDOWN_DURATION) {
+  //   const remainingCooldown = COOLDOWN_DURATION - (now - lastRequestTime);
+  //   return res.status(429).json({ 
+  //     error: 'Please wait before making another request.',
+  //     remainingCooldown
+  //   });
+  // }
 
-  userCooldowns.set(userId, now);
+  // userCooldowns.set(userId, now);
 
   console.log("Searching for user:", req.body.query);
   try {
