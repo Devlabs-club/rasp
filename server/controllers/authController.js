@@ -21,11 +21,8 @@ const googleAuth = async (req, res, next) => {
       user = await User.create({ name, email, googleId: sub, photo: picture });
     }
     
-    res.set("Access-Control-Expose-Headers", "Set-Cookie");
     res.cookie("token", tokens.id_token, {
       withCredentials: true,
-      path: "./",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
       httpOnly: true,
       sameSite: "none",
       secure: true,
@@ -33,7 +30,7 @@ const googleAuth = async (req, res, next) => {
 
     res
         .status(201)
-        .json({ message: "User signed in successfully", success: true });
+        .json({ message: "User signed in successfully", success: true, token: tokens.id_token });
     next();    
   } 
   catch (error) {

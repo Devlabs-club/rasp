@@ -16,15 +16,18 @@ interface GoogleAuthResponse {
 interface AuthResponse {
     success: boolean;
     message: string;
+    token: string;
 }
 
-const api = axios.create({
-    baseURL: "https://rasp-api.vercel.app",
-    withCredentials: true,
-    headers: {
-        "Content-Type": "application/json",
+function setCookie(name: string, value: string, days: number) {
+    let expires = "";
+    if (days) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      expires = "; expires=" + date.toUTCString();
     }
-});
+    document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+}
 
 const Signin: React.FC = () => {
     const navigate = useNavigate();
@@ -38,9 +41,10 @@ const Signin: React.FC = () => {
 
     const handleGoogleAuth = async ({ code }: GoogleAuthResponse) => {   
         try {
-            const { data } = await api.post<AuthResponse>(`${process.env.REACT_APP_SERVER_URL}/auth/google`, { code }, { withCredentials: true });
+            const { data } = await axios.post<AuthResponse>(`${process.env.REACT_APP_SERVER_URL}/auth/google`, { code }, { withCredentials: true });
     
-            const { success, message } = data;
+            const { success, message, token } = data;
+            setCookie("token", token, 7);
             if (success) {
                 console.log("Success");
                 setTimeout(() => {
